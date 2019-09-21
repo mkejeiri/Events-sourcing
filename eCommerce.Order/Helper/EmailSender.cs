@@ -9,5 +9,10 @@ namespace eCommerce.Order.Helper
         {
             await Task.CompletedTask;
         }
+
+        public static async Task SendEmailToDispatch(DispatchOrderCommand order)
+        {
+            await Task.CompletedTask;
+        }
     }
 }

@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Rest", "eCommerce
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Saga", "eCommerce.Saga\eCommerce.Saga.csproj", "{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Planning", "eCommerce.Planning\eCommerce.Planning.csproj", "{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Planner", "eCommerce.Planner\eCommerce.Planner.csproj", "{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,6 +3,8 @@ using NServiceBus;
 
 namespace eCommerce.Messages
 {
+    //The process start by sending this command to Saga
+    //The sender could be the MVC client or RestApi
     public class ProcessOrderCommand: ICommand
     {
         public Guid OrderId { get; set; }

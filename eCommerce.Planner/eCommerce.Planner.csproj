@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>eCommerce.Planning</RootNamespace>
-    <AssemblyName>eCommerce.Planning</AssemblyName>
+    <RootNamespace>eCommerce.Planner</RootNamespace>
+    <AssemblyName>eCommerce.Planner</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -47,7 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DispatchOrderCommand.cs" />
-    <Compile Include="IOrderDispatchMessage.cs" />
+    <Compile Include="IOrderDispatchedMessage.cs" />
     <Compile Include="IOrderPlannedMessage.cs" />
     <Compile Include="IOrderProcessedEvent.cs" />
     <Compile Include="OrderProcessedMessage.cs" />

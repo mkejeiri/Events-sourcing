@@ -11,7 +11,8 @@ namespace eCommerce.Saga
         static void Main(string[] args)
         {
             Console.Title = " eCommerce.Saga";
-            Console.WriteLine("Press any key to continue...");
+            Console.WriteLine($"eCommerce.Saga Started..." +
+                              $" Press any key to stop...");
             Console.ReadKey();
         }
     }

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DispatchOrderCommand.cs" />
     <Compile Include="Helper\EmailSender.cs" />
     <Compile Include="Helper\PriceCalculator.cs" />
     <Compile Include="PriceRequestHandler.cs" />
