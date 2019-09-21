@@ -1,0 +1,12 @@
+﻿@model FireOnWheels.Web.Models.Order
+
+<h2>Please enter your delivery request</h2>
+@using (Html.BeginForm())
+{
+    <fieldset>
+        @Html.EditorForModel()
+    </fieldset>
+    <br/>
+    <button type="submit">Submit</button>
+}
+

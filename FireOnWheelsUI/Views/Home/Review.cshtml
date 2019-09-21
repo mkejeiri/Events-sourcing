@@ -1,0 +1,9 @@
+﻿@model FireOnWheels.Web.Models.Order
+
+<h2>Please review your order</h2>
+@Html.DisplayForModel()
+<h3>
+    @Html.LabelFor(m => m.Price)
+    @Html.DisplayFor(m => m.Price)
+</h3>
+<input type="button" value="Confirm" onclick="location.href='@Url.Action("Confirm", "Home", Model)'" />
