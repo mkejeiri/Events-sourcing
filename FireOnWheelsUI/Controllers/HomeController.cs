@@ -25,8 +25,11 @@ namespace FireOnWheels.Web.Controllers
             var options = new SendOptions();
             options.SetDestination("FireOnWheels.Order");
 
+            //Call Request on the endpoint where we specify PriceResponse as response,
+            //we have to set up a RoutingTo for PriceRequest in the web.config (UnicastBusConfig section).
+            //For the Request method to work, we need install also the NServiceBus Callbacks NuGet package.
+            //In addition to that, we have to configure a uniqueId in the endpoint configuration for the service. 
             //Request is an extension method in the NServiceBus.Callbacks NuGet package
-            //You also need to assign a unique id to the endpoint
             var priceResponse = await endpoint.Request<PriceResponse>(new PriceRequest {Weight = order.Weight}, options);
             order.Price = priceResponse.Price;
             return View("Review", order);

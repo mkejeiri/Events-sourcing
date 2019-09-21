@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireOnWheels.Order", "FireO
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireOnWheels.Rest", "FireOnWheels.Rest\FireOnWheels.Rest.csproj", "{266EA020-226F-4304-810A-D639E2DD69A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireOnWheels.Saga", "FireOnWheels.Saga\FireOnWheels.Saga.csproj", "{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireOnWheels.Planning", "FireOnWheels.Planning\FireOnWheels.Planning.csproj", "{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{266EA020-226F-4304-810A-D639E2DD69A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{266EA020-226F-4304-810A-D639E2DD69A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{266EA020-226F-4304-810A-D639E2DD69A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADEF1B11-149F-4F8B-9616-CDD93794A5BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF5E5F48-A6FF-4051-8E9F-38E882E40F0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
