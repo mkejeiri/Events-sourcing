@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using eCommerce.Messages;
 using NServiceBus;
@@ -22,16 +23,23 @@ namespace eCommerce.Web.Controllers
         [HttpPost]
         public async Task<ActionResult> Index(Order order)
         {
-            var options = new SendOptions();
-            options.SetDestination("eCommerce.Order");
+            //Routing is done in the config file
+            //var options = new SendOptions();
+            //options.SetDestination("eCommerce.Order");
 
             //Call Request on the endpoint where we specify PriceResponse as response,
             //we have to set up a RoutingTo for PriceRequest in the web.config (UnicastBusConfig section).
             //For the Request method to work, we need install also the NServiceBus Callbacks NuGet package.
             //In addition to that, we have to configure a uniqueId in the endpoint configuration for the service. 
             //Request is an extension method in the NServiceBus.Callbacks NuGet package
-            var priceResponse = await endpoint.Request<PriceResponse>(new PriceRequest {Weight = order.Weight}, options);
+            var priceResponse = await endpoint.Request<PriceResponse>(
+                new PriceRequest {Weight = order.Weight}
+                //, options //Routing is done in the config file
+                );
             order.Price = priceResponse.Price;
+
+            //Request is an extension method in the NServiceBus.Callbacks NuGet package
+            //You also need to assign a unique id to the endpoint
             return View("Review", order);
         }
 
@@ -39,8 +47,11 @@ namespace eCommerce.Web.Controllers
         //while the message is sent, controllers are able to process other requests
         public async Task<ActionResult> Confirm(Order order)
         {
-            await endpoint.Send("eCommerce.Order", new ProcessOrderCommand
+            //await endpoint.Send("eCommerce.Order", new ProcessOrderCommand
+            //Routing is done in the config file
+            await endpoint.Send(new ProcessOrderCommand
             {
+                OrderId = Guid.NewGuid(),
                 AddressFrom = order.AddressFrom,
                 AddressTo = order.AddressTo,
                 Price = order.Price,
