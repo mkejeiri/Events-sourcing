@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9A004ADB-B02B-4F24-AABF-B08F209A66E9}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{3AFD5E3E-FC60-4E21-8488-E803CEA7DFE1}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>eCommerce.Messages</RootNamespace>
-    <AssemblyName>eCommerce.Messages</AssemblyName>
+    <RootNamespace>eCommerce.OrderActivity</RootNamespace>
+    <AssemblyName>eCommerce.OrderActivity</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -32,6 +32,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="NServiceBus.Core, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
       <HintPath>..\packages\NServiceBus.6.1.2\lib\net452\NServiceBus.Core.dll</HintPath>
@@ -46,20 +49,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DispatchOrderCommand.cs" />
-    <Compile Include="IOrderActivityEvent.cs" />
-    <Compile Include="IOrderDispatchedMessage.cs" />
-    <Compile Include="IOrderPlannedMessage.cs" />
-    <Compile Include="IOrderProcessedEvent.cs" />
-    <Compile Include="OrderProcessedMessage.cs" />
-    <Compile Include="PlanOrderCommand.cs" />
-    <Compile Include="PriceRequest.cs" />
-    <Compile Include="PriceResponse.cs" />
-    <Compile Include="ProcessOrderCommand.cs" />
+    <Compile Include="OrderActivityHandler.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\eCommerce.Messages\eCommerce.Messages.csproj">
+      <Project>{9a004adb-b02b-4f24-aabf-b08f209a66e9}</Project>
+      <Name>eCommerce.Messages</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
@@ -76,4 +80,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(ProjectDir)$(OutputPath)NServiceBus.Host.exe</StartProgram>
+  </PropertyGroup>
 </Project>

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NServiceBus.Persistence;
-
-namespace eCommerce.Order
+﻿namespace eCommerce.OrderActivity
 {
     using System;
     using System.Threading.Tasks;
@@ -16,16 +9,17 @@ namespace eCommerce.Order
     {
         static void Main()
         {
-            AsyncMain().GetAwaiter().GetResult();
+            ListenToOrderActivityAsync().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        //This will listen to all order activities IOrderActivityEvent message 
+        //and handles them through OrderActivityHandler
+        static async Task ListenToOrderActivityAsync()
         {
-            Console.Title = "eCommerce.Order";
-            LogManager.Use<DefaultFactory>()
-                .Level(LogLevel.Info);
+            Console.Title = "eCommerce.OrderActivity";
+            LogManager.Use<DefaultFactory>().Level(LogLevel.Info);
 
-            var endpointConfiguration = new EndpointConfiguration("eCommerce.Order");
+            var endpointConfiguration = new EndpointConfiguration("eCommerce.OrderActivity");
             endpointConfiguration.UseTransport<MsmqTransport>();
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
             endpointConfiguration.EnableInstallers();
@@ -35,7 +29,7 @@ namespace eCommerce.Order
                 .ConfigureAwait(false);
             try
             {
-                Console.WriteLine("Press any key to exit");
+                Console.WriteLine("eCommerce.OrderActivity. Press any key to exit");
                 Console.ReadKey();
             }
             finally

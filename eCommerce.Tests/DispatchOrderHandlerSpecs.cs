@@ -14,7 +14,7 @@ namespace eCommerce.Tests
         public void Send_DispatchOrderCommand_receive_IOrderDispatchedMessage()
         {
             Test.Handler<DispatchOrderHandler>()
-                .ExpectReply<IOrderDispatchedMessage>(m => m == m)
+                .ExpectReply<IOrderDispatchedMessage>(m => true)
                 .OnMessage<DispatchOrderCommand>();
         }
     }

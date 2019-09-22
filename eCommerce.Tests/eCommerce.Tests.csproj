@@ -56,8 +56,8 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SagaSpecs.cs" />
-    <Compile Include="DispatchSpecs.cs" />
+    <Compile Include="ProcessOrderSagaSpecs.cs" />
+    <Compile Include="DispatchOrderHandlerSpecs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
