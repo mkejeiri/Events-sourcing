@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Tests", "eCommerc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.OrderActivity", "eCommerce.OrderActivity\eCommerce.OrderActivity.csproj", "{3AFD5E3E-FC60-4E21-8488-E803CEA7DFE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eCommerce.Monitoring", "eCommerce.Monitoring\eCommerce.Monitoring.csproj", "{6D09A0F0-1A68-4D3B-B25C-1E25D26AFD44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{3AFD5E3E-FC60-4E21-8488-E803CEA7DFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AFD5E3E-FC60-4E21-8488-E803CEA7DFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AFD5E3E-FC60-4E21-8488-E803CEA7DFE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D09A0F0-1A68-4D3B-B25C-1E25D26AFD44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D09A0F0-1A68-4D3B-B25C-1E25D26AFD44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D09A0F0-1A68-4D3B-B25C-1E25D26AFD44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D09A0F0-1A68-4D3B-B25C-1E25D26AFD44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
