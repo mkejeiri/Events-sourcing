@@ -7,6 +7,18 @@ using NServiceBus.Logging;
 namespace eCommerce.Saga
 {
     /*
+     NO NEED FOR ROUTING AND ConfigureHowToFindSaga CASE:
+     ----------------------------------------------------
+     - Service will reply directly to the saga and NServiceBus knows where to send message (reply), 
+        because the saga details are invisibly present in the message. 
+
+     - in case ReplyToOriginator there is no need to specify a mapping for the message and configure how to find the saga.
+       The Data abstract class contains the adverse of the originator (i.e. service) that started the saga. 
+       using the ReplyToOriginator method in the saga class, a reply directly sent to the originator without 
+       the need for routing config.
+     */
+
+    /*
      NServiceBus know what saga belongs to what messages through an abstract method in a Saga class : i.e. ConfigureHowToFindSaga, we specify 
      all messages that are received by the saga and the data object that the saga has persisted. ConfigureHowToFindSaga provides a SagaPropertyMapper object as a parameter
      generic method, with ConfigureMapping as the generic parameters supply the message type that you want to map to the SagaData object. With a lambda,
