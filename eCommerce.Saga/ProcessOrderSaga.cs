@@ -16,6 +16,7 @@ namespace eCommerce.Saga
        The Data abstract class contains the adverse of the originator (i.e. service) that started the saga. 
        using the ReplyToOriginator method in the saga class, a reply directly sent to the originator without 
        the need for routing config.
+       Nservicebus knows this through the message headers {ReplyToAddress}
      */
 
     /*
