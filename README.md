@@ -50,9 +50,7 @@ for the management and monitoring of your RabbitMQ server:
 ### How's that work?
 a message protocol works by receiving messages from a client or publisher and broker routes a message to a receiving application or consumer via an exchange, which acts as a mailbox, it sends a message to a queue by using different rules called bindings (direct routing, fanout, topic, headers) all within the message broker which delivers the message from the queue to a consumer.
 The consumer (subscriber to the queue) pulls out the queue when a message is published, a publisher can specify various different messaging attributes which will be used by the message broker.
-
 ![pic](src/RabbitMq/images/figure1.JPG)
-
 #### Message acknowledgements
 The AMQP protocol has a mechanism for message acknowledgements (ACK) to deal with network unreliability and app failures; when a message is delivered to a consuming application, the consumer notifies the broker, either automatically, or as soon as the app developer decide so. 
 When message ACK are used, the message broker will only remove the message from the queue when it receives a notification for that message. If a user messages are routed by the routing key (acts like a filter), it cannot be routed anywhere, it can either be returned to the sender, dropped, or if configured, be placed on a dead letter queue which is monitored.
@@ -67,26 +65,19 @@ When message ACK are used, the message broker will only remove the message from 
 **Types of exchanges**:
 
 - **Direct exchanges**: queue binds to the exchange using a routing key, ideal for publishing a message onto just one queue  (message and queue keys must match)
-
 ![pic](src/RabbitMq/images/figure2.JPG)
-
  e.g. used to distribute messages between multiple work processes in a round robin manner
 
 - **Fanout exchanges**: routes messages to all queues that are bound to it (routing key is ignored = broadcast), ideal for the broadcast
-
 ![pic](src/RabbitMq/images/figure3.JPG)
  e.g sync online game scores, weather updates, chat sessions between groups of people
 
 - **Topic exchanges**: one or many queues based on pattern matches between the message routing key
-
 ![pic](src/RabbitMq/images/figure4.JPG)
-
 e.g. multi-card/wild carded routing key  of messages to different queues. If * hash are used in binding then topic exchanges = fanout exchanges, if not used then topic exchanges = direct exchanges  
 
 - **Header exchanges**: routing of multiple attributes that are expressed in headers (i.e. routing key/queue is ignored = only express one piece of information)
-
 ![pic](src/RabbitMq/images/figure5.JPG)
-
 **Header exchanges** looks like a supercharged direct exchanges, as the routing is based on header values (also used as direct exchanges when routing key is not string)
 
 Each exchange is declared with a set of attributes :
