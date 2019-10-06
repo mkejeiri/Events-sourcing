@@ -483,5 +483,26 @@ Next, a few considerations that can have substantial effects on transactional se
 - Queueing criteria, determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
 - notification, when a publisher may need to know when some or all of the subscribers have received a message. 
 
+### Uses for Message Queueing
+
+- **Decoupling**: introducing a layer between processes, message queues create an implicit interface that both processes implement. This allows we to extend and modify these processes independently by simply ensuring that they adhere to the same interface requirements. 
+
+- **redundancy**: Sometimes processes fail when processing data. Unless that data is persisted, it's lost forever. Queues mitigate this by persisting data until it has been fully processed. The put, get, delete paradigm, which many message queues use, requires a process to explicitly indicate that it is finished processing a message before that message is removed from the queue, ensuring that data is kept
+safe until we are done with it (i.e. message acknowledgements).
+
+
+- **Scalability**: message queues decouple the processes, it's easy to scale up the rate which messages are added to the queue or processed simply by adding another process. No code needs to be changed, no configurations need to be tweaked. Scaling up is as simple as adding more processes to the backend solution. 
+
+- **Resiliency**: when part of the architecture fails, it doesn't need to take the entire system down with it. Message queues decouple processes. So if an application that is processing messages from the queue fails, messages can still be added to the queue to be processed when the system recovers. This ability to accept requests that will be retired or processed at a later date is often the difference between an inconvenienced customer and a frustrated customer. 
+
+- **Delivery guarantees**: The redundancy provided by message queues guarantees a message will be processed eventually so long as a process is reading the queue. No matter how many processes are pulling data from the queue, each message will only be processed a single time. This is made possible because retrieving a message reserves that message, temporarily removing it from the queue till it has been acknowledged. Unless the client specifically states that it is finished with that message, the message will be placed back onto the queue to be processed after a configurable amount of time. 
+
+- **Ordering guarantees**: the order of which a data is processed is important. Message queues are inherently ordered and capable of providing guarantees that the data will be processed in a specific order. Message queuing such as RabbitMQ guarantee that messages will be processed using a first-in, first-out order. So the order in which messages are placed onto a queue is the order in which they'll be retrieved from it.
+
+- **Buffering**: In any system, there might be components that require different processing times, e.g. it might take less time to upload an image than it does to apply a set of filters to it. Message queues help the set tasks operate at peak efficiency by offering a buffering layer. The process writing to the queue can write as fast as it is able to instead of being constrained by the readiness of the process reading from the queue. This buffering helps control and optimize the speed in which data flows through the system. 
+
+- **asynchronous communication**: sometimes, we don't want only to process a message immediately. Message queues enable asynchronous processing, which allows us to put a message onto the queue without processing it immediately, queue up as many messages as we like and then process them at the leisure. 
+
+
 
 # II) Events-sourcing
