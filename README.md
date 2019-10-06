@@ -21,7 +21,7 @@ The **RabbitMQ** server is a message broker that acts as a message coordinator f
 
 
 ### MSMQ (Microsoft platform since 1997)
-Messaging protocol that allows applications running on separate servers and processes to communicate in a fail safe manner. The queue is a temporary storage location which messages can be sent and received reliably when destination is reachable. This enables communication across networks and between computers running Windows only which may not always be connected (versus sockets and other network protocols assure you that direct connections always exist). The Microsoft Distributed Transaction Coordinator(MS DTC)allows multiple operations on multiple queues to be wrapped in a single transaction.
+Messaging protocol that allows applications running on separate servers and processes to communicate in a fail safe manner. The queue is a temporary storage location which messages can be sent and received reliably when destination is reachable. This enables communication across networks and between computers running Windows only which may not always be connected (versus sockets and other network protocols assure we that direct connections always exist). The Microsoft Distributed Transaction Coordinator(MS DTC)allows multiple operations on multiple queues to be wrapped in a single transaction.
 
 ### RabbitMQ vs. MSMQ
 - **Centralized vs decentralized** message broker : messages are stored on a central server or cluster of servers, client sends messages to that central server, and then a subscriber can then retrieve that message (VS MSMQ is decentralized : each machine has its own queue)
@@ -30,7 +30,7 @@ Messaging protocol that allows applications running on separate servers and proc
 
 ### RabbitMQ management plugin
 It provides a browser-based user interface to administer the message broker, as well as a HTTP-based API
-for the management and monitoring of your RabbitMQ server: 
+for the management and monitoring of the RabbitMQ server: 
 - declare, list, and delete exchanges, queues, bindings, users, virtual hosting permissions, 
 - monitoring queue length, message rates, and data rates per connection
 - sending and receiving messages
@@ -215,7 +215,7 @@ _channel = _connection.CreateModel();
 
 
 ### Example of a Multiple Queues (i.e. Worker Queue or multiple consumers) 
-The idea is that messages from the queue are shared between one or more consumers, it commonly used when you want to share the load, between consumers when processing higher volumes of messages.
+The idea is that messages from the queue are shared between one or more consumers, it commonly used when we want to share the load, between consumers when processing higher volumes of messages.
 ![pic](src/RabbitMq/images/figure11.JPG)
 
 **Producer**
@@ -467,7 +467,7 @@ using (_connection = _factory.CreateConnection())
 
 Next, a few considerations that can have substantial effects on **transactional semantics**, **system reliability**, and **system efficiency**. 
 
-- **durability**: messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
+- **Durability**: messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
 
 - **Security policies**: we define which application should have access to the same messages. 
 
@@ -478,16 +478,16 @@ Next, a few considerations that can have substantial effects on **transactional 
 
 - **Routing policies**: where in a system with many queue servers, what server should receive a message or a queue's messages. 
 
-- **Batching policies**: this is where you define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
+- **Batching policies**: this is where we define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
 
 - **Queueing criteria**: determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
-- **notification**: when a publisher may need to know when some or all of the subscribers have received a message. 
+- **Notification**: when a publisher may need to know when some or all of the subscribers have received a message. 
 
 ### Uses for Message Queueing
 
 - **Decoupling**: introducing a layer between processes, message queues create an implicit interface that both processes implement. This allows we to extend and modify these processes independently by simply ensuring that they adhere to the same interface requirements. 
 
-- **redundancy**: Sometimes processes fail when processing data. Unless that data is persisted, it's lost forever. Queues mitigate this by persisting data until it has been fully processed. The put, get, delete paradigm, which many message queues use, requires a process to explicitly indicate that it is finished processing a message before that message is removed from the queue, ensuring that data is kept
+- **Redundancy**: Sometimes processes fail when processing data. Unless that data is persisted, it's lost forever. Queues mitigate this by persisting data until it has been fully processed. The put, get, delete paradigm, which many message queues use, requires a process to explicitly indicate that it is finished processing a message before that message is removed from the queue, ensuring that data is kept
 safe until we are done with it (i.e. message acknowledgements).
 
 
@@ -501,7 +501,14 @@ safe until we are done with it (i.e. message acknowledgements).
 
 - **Buffering**: In any system, there might be components that require different processing times, e.g. it might take less time to upload an image than it does to apply a set of filters to it. Message queues help the set tasks operate at peak efficiency by offering a buffering layer. The process writing to the queue can write as fast as it is able to instead of being constrained by the readiness of the process reading from the queue. This buffering helps control and optimize the speed in which data flows through the system. 
 
-- **asynchronous communication**: sometimes, we don't want only to process a message immediately. Message queues enable asynchronous processing, which allows us to put a message onto the queue without processing it immediately, queue up as many messages as we like and then process them at the leisure. 
+- **Asynchronous communication**: sometimes, we don't want only to process a message immediately. Message queues enable asynchronous processing, which allows us to put a message onto the queue without processing it immediately, queue up as many messages as we like and then process them at the leisure. 
+
+**System resilence**
+The system should be able to cope with change as well as minor or major disruptions.
+> The power or ability to return to the original form or position after being bend, compressed or stretched => cope with problems and not be hardened against failure (elasticity)
+> The capacity to recover quickly from difficulties => fast recovery of systems more explicitly
+> The ability of a system to cope with change=>comes from supply chain background and is more about keeping a system running
+
 
 
 
