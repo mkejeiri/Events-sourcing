@@ -512,8 +512,8 @@ The system should be able to cope with change as well as minor or major disrupti
 ### Asynchronous Services
 a *synchronous communication*, a call is made to a remote server. We send blocks until the operation completes (easy to reason about),while **asynchronous communication**, the caller doesn't wait for the operation to complete before returning. It may not even care whether or not the operation completes at all.
  
-These two different **modes of communication** can enable two different **styles of collaboration**:
-- **request and response**: a client initiates a request and waits for the response, This model clearly aligns well to synchronous communication, but can work for asynchronous communication as well. We might kick off an operation and register a callback asking the server to let me know when my operation is completed.
+These two different **modes of communication** that can enable two different **styles of collaboration**:
+- **request and response**: a client initiates a request and waits for the response, This model clearly aligns well to synchronous communication, but can work for asynchronous communication as well. We might kick off an operation and register a callback asking the server to let us know when my operation is completed.
 
 - **Event-based** collaboration where we **invert flow**, instead of the client initiating requests asking for things to be done, it instead says that something has happened and expects other parties to know what to do. 
 	- Event-based systems by their nature are asynchronous. This means that the processing of these messages doesn't need to be centralized in any one place. Instead, we can have many consumers to process messages. e.g. we have multiple consumers working on the messages.
