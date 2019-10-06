@@ -52,6 +52,8 @@ namespace RabbitMQ.Examples
 
         private static void SendMessage(Payment message)
         {
+            //We are publishing directly to an and exchange any queues that have been bound to that exchange will receive the message
+            //No need for routingKey Vs Default exchange (which bears the name of the queue!) 
             _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
             Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", message.CardNumber, message.AmountToPay);
         }

@@ -284,6 +284,8 @@ _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", P
 _connection = _factory.CreateConnection();
 _channel = _connection.CreateModel();
 _channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false);
+//We are publishing directly to an and exchange any queues that have been bound to that exchange will receive the message
+//No need for routingKey Vs Default exchange (which bears the name of the queue!) 
 _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
 ```
 **[Subscriber](src/RabbitMq/PublishSubscribe_Subscriber/Program.cs)**
@@ -294,15 +296,30 @@ using (_connection = _factory.CreateConnection())
 {
     using (var channel = _connection.CreateModel())
   {
-    channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
+	//Idempotent operation : if the exchange is already there it won't be created, otherwise it will get created.
+	channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
+
+	//this uses a system generated queue name such as amq.gen-qVC1KT9w-plxzpV9MVId9w
     var queueName = channel.QueueDeclare().QueueName;
+	
     channel.QueueBind(queue: queueName, exchange: ExchangeName, routingKey: "");
+	
     _consumer = new QueueingBasicConsumer(channel);
+	
+	//consumer has created its own queue, and subscribed itself to the exchange
+	//Now it will receive all messages that are sent to that exchange ("PublishSubscribe_Exchange")
+	//noAck: true =>  No waiting for a message acknowledgement before receiving the next message.
+	//We don't need to as our subscriber application is reading from its own queue (takes msg as it can deal with)
      channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
-    while (true)
+    
+	while (true)
     {
         var ea = _consumer.Queue.Dequeue();
         var message = (Payment)ea.Body.DeSerialize(typeof(Payment));
+		
+		//no need to send message acknowledgement to tell RabbitMQ that we're finished with a message, 
+		//because we want all messages to be sent to every consumer, otherwise get removed from the queue
+		//channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
     }
   }
 }
