@@ -184,23 +184,23 @@ string QueueName = "ExampleQueue";
 
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest"};
 _connection = _factory.CreateConnection();
-_model = _connection.CreateModel(); 
+_channel = _connection.CreateModel(); 
 
 #tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
 #or be re-created when the server is restarted.                     
-_model.QueueDeclare(QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);    
+_channel.QueueDeclare(QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);    
 
 ```
 
 ```sh
 #Send message  
 #payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
- _model.BasicPublish("", QueueName, null, payment.Serialize());
+ _channel.BasicPublish("", QueueName, null, payment.Serialize());
 ```
 
 ```sh
 #receive message              
-_model.BasicConsume(QueueName, true, consumer);
+_channel.BasicConsume(QueueName, true, consumer);
 
 # DeSerialize is user-defined extension method 
  var message = (Payment)consumer.Queue.Dequeue().Body.DeSerialize(typeof(Payment));
