@@ -5,7 +5,7 @@ that support many different programming environments (. NET, JAVA, Erlang, Ruby,
 The **RabbitMQ** server is a message broker that acts as a message coordinator for the applications that integrate together. i.e. a common platform for sending and receiving messages.
 
 **RabbitMQ features** :
-- reliability : message broker built on top of a solid, high-performance, reliable, and durable foundations, this includes Messages can be persisted to disk to guard from loss when a server is restarted,and message delivery acknowledgements from receiver to sender to ensure that the message has been received and stored.
+- reliability : message broker built on top of a solid, high-performance, reliable, and durable foundations, this includes Messages can be persisted to disk to guard from loss when a server is restarted, and message delivery acknowledgements from receiver to sender to ensure that the message has been received and stored.
 
 
 - routing: messages passes through exchanges before they are stored in a queue, There are different exchange - a complex routing scenarios by binding exchanges together
@@ -33,7 +33,7 @@ It provides a browser-based user interface to administer the message broker, as 
 for the management and monitoring of your RabbitMQ server: 
 - declare, list, and delete exchanges, queues, bindings, users, virtual hosting permissions, 
 - monitoring queue length, message rates, and data rates per connection
-- sending andreceiving messages
+- sending and receiving messages
 - monitoring the Erlang processes, file descriptors, and memory use, 
 - force closing connections and purging queues.
 
@@ -113,7 +113,7 @@ If an **AMQP message** cannot be routed to any queue (e.g. missing valid binding
 **From systems that consume messages perspective**, storing messages in queues is good, provided that there are apps on the other side of the queues to consume those messages.
 
 **Consumers/subscribers with a set of queues**
-Let assume an apps will register as **consumers/subscribers** to a **set of queues**, a common  scenario will be to balance a load of apps feeding from the queues in a high volume scenario. When a consuming application acts on a message from the queue, it is possible that a problem could occur and lead into a message lose, futher, when an app acts on a message, that message is removed from the queue, but we need to make sure that the message has been successfully processed before that to happen. 
+Let assume an apps will register as **consumers/subscribers** to a **set of queues**, a common  scenario will be to balance a load of apps feeding from the queues in a high volume scenario. When a consuming application acts on a message from the queue, it is possible that a problem could occur and lead into a message lose, further, when an app acts on a message, that message is removed from the queue, but we need to make sure that the message has been successfully processed before that to happen. 
 
 ![pic](src/RabbitMq/images/figure7.JPG)
 
@@ -214,7 +214,7 @@ _channel = _connection.CreateModel();
 [more ...](src/RabbitMq/StandardQueue/Program.cs)
 
 
-### Example of a Multiple Queues (i.e Worker Queue or multiple consumers) 
+### Example of a Multiple Queues (i.e. Worker Queue or multiple consumers) 
 The idea is that messages from the queue are shared between one or more consumers, it commonly used when you want to share the load, between consumers when processing higher volumes of messages.
 ![pic](src/RabbitMq/images/figure11.JPG)
 
@@ -395,8 +395,8 @@ using (_connection = _factory.CreateConnection())
 		//and basic consumer is called to start reading from the queue
 		//noAck: false => we care that the messages are safe on the queue and we want the message to be acknowledged
 		//in case of the consumer crashes, the message is put back into the queue and eventually later
-		//dispatched to the next iddle worker.
-		//in case of the consumer succeedes Ack is sent back to the broker, message (successfully processed) is discarded 
+		//dispatched to the next idle worker.
+		//in case of the consumer succeeds Ack is sent back to the broker, message (successfully processed) is discarded 
 		//from the queue and worker is ready to process another one.
         channel.BasicConsume(queue: CardPaymentQueueName, noAck: false, consumer: consumer);
 
@@ -459,7 +459,7 @@ using (_connection = _factory.CreateConnection())
 }
 ```
 
-### Message queueeing
+### Message queuing
 
 - They are components used for inter-process communication or for interthread communication within the same process. They use a queue for messaging, which is passing data between systems. 
 
@@ -469,7 +469,7 @@ Next, a few considerations that can have substantial effects on transactional se
 
 - durability : messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
 
-- Security policies: we define which application should have access to thesemessages. 
+- Security policies: we define which application should have access to the same messages. 
 
 - Message purging policies where queues or messages may have a time-to-live, which defines when they will be automatically deleted. 
 
@@ -478,7 +478,7 @@ Next, a few considerations that can have substantial effects on transactional se
 
 - Routing policies where in a system with many queue servers, what server should receive a message or a queue's messages. 
 
-- Batching policies, this is where you define if messages should be deliveredimmediately or should the system wait a bit and then try to deliver many messages at once. 
+- Batching policies, this is where you define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
 
 - Queueing criteria, determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
 - notification, when a publisher may need to know when some or all of the subscribers have received a message. 
