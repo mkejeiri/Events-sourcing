@@ -51,7 +51,7 @@ for the management and monitoring of your RabbitMQ server:
 a message protocol works by receiving messages from a client or publisher and broker routes a message to a receiving application or consumer via an exchange, which acts as a mailbox, it sends a message to a queue by using different rules called bindings (direct routing, fanout, topic, headers) all within the message broker which delivers the message from the queue to a consumer.
 The consumer (subscriber to the queue) pulls out the queue when a message is published, a publisher can specify various different messaging attributes which will be used by the message broker.
 
-![pic](src/RabbitMq/images/figure1.JPG)
+![pic](src/RabbitMq/images/figure1.JPG=80x20)
 
 #### Message acknowledgements
 The AMQP protocol has a mechanism for message acknowledgements (ACK) to deal with network unreliability and app failures; when a message is delivered to a consuming application, the consumer notifies the broker, either automatically, or as soon as the app developer decide so. 
