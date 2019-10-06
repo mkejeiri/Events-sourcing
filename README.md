@@ -179,6 +179,8 @@ What happens is under the covers we are posting to the **default exchange**; **R
 **Declaring** the **queue** in **RabbitMQ** is an **idempotent operation**, i.e. it will only be created if it doesn't already exist. 
 >> Generally speaking, an item hosting operation is one that has no additional effect if it is called more than once, with the same input parameters. 
 
+[more ...](src/RabbitMq/StandardQueue/Program.cs)
+
 ```sh
 string QueueName = "ExampleQueue";
 
