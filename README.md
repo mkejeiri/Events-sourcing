@@ -38,10 +38,10 @@ for the management and monitoring of your RabbitMQ server:
 - force closing connections and purging queues.
 
 
->> Go to http://localhost:15672  and then guest/guest
->> go to exchange create a TestExchange, go to Queue and create Testqueue
->> back to exchange and publish "hello in TestExchange" and back to queue and select Testqueue and then get message.
->> if we don't want the messages to be requeued then in Testqueue => Ack Mode: Ack message requeue false { Nack message requeue true, Ack >> message requeue false, Reject requeue true,Reject requeue false}
+> Go to http://localhost:15672  and then guest/guest
+> go to exchange create a TestExchange, go to Queue and create Testqueue
+> back to exchange and publish "hello in TestExchange" and back to queue and select Testqueue and then get message.
+> if we don't want the messages to be requeued then in Testqueue => Ack Mode: Ack message requeue false { Nack message requeue true, Ack > message requeue false, Reject requeue true,Reject requeue false}
 
 
 ### AMQP Messaging Standard
@@ -86,8 +86,8 @@ Each exchange is declared with a set of attributes :
 - **auto-delete** flag: if the exchange is deleted when all the other queues are finished using it
 - **arguments**: arguments that message broker dependent on.
 
->> The AMQP message brokers contain a default exchange (pre-declared) that is a direct exchange with no name (empty string); useful for simple app where the queue that is created it is bound to it with a routing key, which is the same as the queue name. 
->> e.g declaring a queue with the name 'payment requests', the message broker will bind it to the default exchange by using the 'payment request' as the routing key. i.e. the default exchange makes it looks as it directly delivers messages to queues (not technically happening). 
+> The AMQP message brokers contain a default exchange (pre-declared) that is a direct exchange with no name (empty string); useful for simple app where the queue that is created it is bound to it with a routing key, which is the same as the queue name. 
+> e.g declaring a queue with the name 'payment requests', the message broker will bind it to the default exchange by using the 'payment request' as the routing key. i.e. the default exchange makes it looks as it directly delivers messages to queues (not technically happening). 
 
 
 **Queues, Bindings, and Consumers**
@@ -130,7 +130,7 @@ With an **explicit acknowledgement**, it is up to the **app** to decide when to 
 
 If the consuming **app crashes before** the **acknowledgement** has been sent, then a **message broker** will try to **redeliver** the message to another consumer. When an app **processes a message**, that processing may or may not succeed. If the processing fails for any reason(e.g. database time outs), then a consumer app can reject the message. The app then can ask the broker to discard the message or re-queue it. 
 
->> If there's only one consumer app subscribed to the queue, we need to **make sure** that we **don't create an infinite message delivery loop** by rejecting and re-queuing the message from the same consumer.
+> If there's only one consumer app subscribed to the queue, we need to **make sure** that we **don't create an infinite message delivery loop** by rejecting and re-queuing the message from the same consumer.
 
 ### RabbitMQ Client Library
 We need to install the RabbitMQ client library for dot net. to develop software against RabbitMQ. [API guide to client library API](https://www.rabbitmq.com/devtools.html)
@@ -177,7 +177,7 @@ using client API we have one producer posting the payment message onto a "Standa
 What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "StandardQueue" queue to the default exchange using "StandardQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "StandardQueue" will be routing to "StandardQueue" queue.
 
 **Declaring** the **queue** in **RabbitMQ** is an **idempotent operation**, i.e. it will only be created if it doesn't already exist. 
->> Generally speaking, an item hosting operation is one that has no additional effect if it is called more than once, with the same input parameters. 
+> Generally speaking, an item hosting operation is one that has no additional effect if it is called more than once, with the same input parameters. 
 
 
 ```sh
@@ -206,7 +206,7 @@ _channel = _connection.CreateModel();
 //DeSerialize is user-defined extension method 
  var message = (Payment)consumer.Queue.Dequeue().Body.DeSerialize(typeof(Payment));
 ```
->> Consumers last so long as the channel they were declared on, or until the client cancels them.
+> Consumers last so long as the channel they were declared on, or until the client cancels them.
 
 [more ...](src/RabbitMq/StandardQueue/Program.cs)
 
@@ -264,7 +264,7 @@ while (true)
 }
 
 ```
->> prefetchCount: 1 (load balancing among workers) means that RabbitMQ won't dispatch a new message to a consumer, until that consumer is finished processing and acknowledged the message, if a worker is busy (noAck) RabbitMQ will dispatch a message on the next worker that is not busy.
+> prefetchCount: 1 (load balancing among workers) means that RabbitMQ won't dispatch a new message to a consumer, until that consumer is finished processing and acknowledged the message, if a worker is busy (noAck) RabbitMQ will dispatch a message on the next worker that is not busy.
 
 
 [more on consumer ...](src/RabbitMq/WorkerQueue_Consumer/Program.cs)
@@ -276,7 +276,7 @@ The messages are sent from the exchange to all consumers that are **bound to the
 ![pic](src/RabbitMq/images/figure12.JPG)
 
 **[Publisher](src/RabbitMq/PublishSubscribe_Publisher/Program.cs)**
->> If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
+> If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
 
 ```sh
 string ExchangeName = "PublishSubscribe_Exchange";
