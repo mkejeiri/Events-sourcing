@@ -275,7 +275,7 @@ The messages are sent from the exchange to all consumers that are **bound to the
 
 ![pic](src/RabbitMq/images/figure12.JPG)
 
-**Publisher**
+**[Publisher](src/RabbitMq/PublishSubscribe_Publisher/Program.cs)**
 >> If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
 
 ```sh
@@ -286,8 +286,7 @@ _channel = _connection.CreateModel();
 _channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false);
 _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
 ```
-**Subscriber**
-
+**[Subscriber](src/RabbitMq/PublishSubscribe_Subscriber/Program.cs)**
 ```sh
 string ExchangeName = "PublishSubscribe_Exchange";
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
