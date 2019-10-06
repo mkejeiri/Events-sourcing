@@ -467,27 +467,21 @@ using (_connection = _factory.CreateConnection())
 
 Next, a few considerations that can have substantial effects on transactional semantics, system reliability, and system efficiency. 
 
-- They have implicit or explicit limits on the size of the data that may be transmitted in a single message and the number of messages that may remain outstanding on the queue. Many implementations of message queues function internally within an operating system or within an application. Some implementations are the passing of messages between different computer systems and platforms potentially connecting multiple applications and multiple operating systems. 
+- durability : messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
 
-- They typically provide enhanced resilience functionality to ensure that messages do not get lost in the event of a system failure.
+- Security policies: we define which application should have access to thesemessages. 
 
-- In their implementation, a system administrator installs and configures message queueing software and defines and names messages queue. An application then merges some software that listens for messages placed onto that queue. Second and subsequent applications may connect to the queue and transfer messages onto it. 
+- Message purging policies where queues or messages may have a time-to-live, which defines when they will be automatically deleted. 
 
-- The queue manager software, such asRabbitMQ, stores the messages until the receiving application connects and then calls a broker to receive the message. The receiving application then processes the message as it sees fit. There are many desired properties of a message queueing system including durability where messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
+- Message filtering where some systems support filtering data so a subscriber may only see messages matching some pre-specified criteria of interest. 
+- Delivery policies where we define the need to guarantee that a message is delivered at least once or no more than once. 
 
-- Security policies, this is where we define which application should have access to the same messages.
-	- Message purging policies where queues or messages may have a time-to-live, which defines when they will be automatically deleted.
-	
-	- Message filtering where some systems support filtering data so a subscriber may only see messages matching some pre-specified criteria of interest. 
-	
-	- Delivery policies where we define the need to guarantee that a message is delivered at least once or no more than once.
-	
-	- Routine policies where in a system with many queue servers, what server should receive a message or a queue's messages. 
-	
-	- Batching policies where we define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
-	
-	- Queueing criteria determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues and finally receipt notification, when a publisher may need to know when some or all of the subscribers have received a message. 
-	
+- Routing policies where in a system with many queue servers, what server should receive a message or a queue's messages. 
+
+- Batching policies, this is where you define if messages should be deliveredimmediately or should the system wait a bit and then try to deliver many messages at once. 
+
+- Queueing criteria, determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
+- notification, when a publisher may need to know when some or all of the subscribers have received a message. 
 
 
 # II) Events-sourcing
