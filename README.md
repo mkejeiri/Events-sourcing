@@ -461,27 +461,27 @@ using (_connection = _factory.CreateConnection())
 
 ### Message queuing
 
-- They are components used for inter-process communication or for interthread communication within the same process. They use a queue for messaging, which is passing data between systems. 
+- They are **components** used for **inter-process communication** or for **inter-thread communication** within the same process. They use a queue for messaging, which is passing data between systems. 
 
-- They provides an asynchronous communications protocol. The sender and the receiver of the message do not need to interact with the message queue at the same time. Messages placed onto the queue are stored until the recipient retrieves them.
+- They provides an **asynchronous communications protocol**. The sender and the receiver of the message do not need to interact with the message queue at the same time. Messages placed onto the queue are stored until the recipient retrieves them.
 
-Next, a few considerations that can have substantial effects on transactional semantics, system reliability, and system efficiency. 
+Next, a few considerations that can have substantial effects on **transactional semantics**, **system reliability**, and **system efficiency**. 
 
-- durability : messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
+- **durability**: messages may be kept in memory, written to disk, or even committed to a database if the need for reliability indicates a more resource-intensive solution. 
 
-- Security policies: we define which application should have access to the same messages. 
+- **Security policies**: we define which application should have access to the same messages. 
 
-- Message purging policies where queues or messages may have a time-to-live, which defines when they will be automatically deleted. 
+- **Message purging policies**: where queues or messages may have a time-to-live, which defines when they will be automatically deleted. 
 
-- Message filtering where some systems support filtering data so a subscriber may only see messages matching some pre-specified criteria of interest. 
-- Delivery policies where we define the need to guarantee that a message is delivered at least once or no more than once. 
+- **Message filtering**: where some systems support filtering data so a subscriber may only see messages matching some pre-specified criteria of interest. 
+- **Delivery policies**: where we define the need to guarantee that a message is delivered at least once or no more than once. 
 
-- Routing policies where in a system with many queue servers, what server should receive a message or a queue's messages. 
+- **Routing policies**: where in a system with many queue servers, what server should receive a message or a queue's messages. 
 
-- Batching policies, this is where you define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
+- **Batching policies**: this is where you define if messages should be delivered immediately or should the system wait a bit and then try to deliver many messages at once. 
 
-- Queueing criteria, determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
-- notification, when a publisher may need to know when some or all of the subscribers have received a message. 
+- **Queueing criteria**: determines when should a message be considered unqueued, when one queue has it or when it's been forwarded to at least one remote queue or to all queues 
+- **notification**: when a publisher may need to know when some or all of the subscribers have received a message. 
 
 ### Uses for Message Queueing
 
