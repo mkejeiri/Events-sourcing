@@ -503,7 +503,7 @@ safe until we are done with it (i.e. message acknowledgements).
 
 - **Asynchronous communication**: sometimes, we don't want only to process a message immediately. Message queues enable asynchronous processing, which allows us to put a message onto the queue without processing it immediately, queue up as many messages as we like and then process them at the leisure. 
 
-**System resilence**
+**System resilence** :
 The system should be able to cope with change as well as minor or major disruptions.
 > The power or ability to return to the original form or position after being bend, compressed or stretched => cope with problems and not be hardened against failure (elasticity)
 > The capacity to recover quickly from difficulties => fast recovery of systems more explicitly
