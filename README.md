@@ -169,5 +169,15 @@ channel.QueueDeclare("MyQueue");
 channel.QueueBind("MyQueue", ExchangeName ,"");
 ```
 
+### Example of a Standard Queue 
+using client API we have one producer posting the payment message onto a "ExampleQueue" queue, and one consumer reading that message from the "ExampleQueue" queue. It looks like the producer posts directly onto the "ExampleQueue" queue, instead of using an exchange. 
+
+![pic](src/RabbitMq/images/figure10.JPG)
+
+What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "ExampleQueue" queue to the default exchange using "ExampleQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "ExampleQueue" will be routing to "ExampleQueue" queue.
+
+
+
+
 
 # II) Events-sourcing
