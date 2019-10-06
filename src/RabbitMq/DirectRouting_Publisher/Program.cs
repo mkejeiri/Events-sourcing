@@ -7,7 +7,7 @@ namespace RabbitMQ.Examples
     {
         private static ConnectionFactory _factory;
         private static IConnection _connection;
-        private static IModel _model;
+        private static IModel _channel;
 
         private const string ExchangeName = "DirectRouting_Exchange";
         private const string CardPaymentQueueName = "CardPaymentDirectRouting_Queue";
@@ -26,7 +26,7 @@ namespace RabbitMQ.Examples
             var payment9 = new Payment { AmountToPay = 5.0m, CardNumber = "1234123412341234" };
             var payment10 = new Payment { AmountToPay = 12.0m, CardNumber = "1234123412341234" };
 
-            var purchaseOrder1 = new PurchaseOrder{AmountToPay = 50.0m, CompanyName = "Company A", PaymentDayTerms = 75, PoNumber = "123434A"};
+            var purchaseOrder1 = new PurchaseOrder { AmountToPay = 50.0m, CompanyName = "Company A", PaymentDayTerms = 75, PoNumber = "123434A" };
             var purchaseOrder2 = new PurchaseOrder { AmountToPay = 150.0m, CompanyName = "Company B", PaymentDayTerms = 75, PoNumber = "193434B" };
             var purchaseOrder3 = new PurchaseOrder { AmountToPay = 12.0m, CompanyName = "Company C", PaymentDayTerms = 75, PoNumber = "196544A" };
             var purchaseOrder4 = new PurchaseOrder { AmountToPay = 2150.0m, CompanyName = "Company D", PaymentDayTerms = 75, PoNumber = "234434H" };
@@ -34,7 +34,7 @@ namespace RabbitMQ.Examples
             var purchaseOrder6 = new PurchaseOrder { AmountToPay = 7150.0m, CompanyName = "Company F", PaymentDayTerms = 75, PoNumber = "1423474U" };
             var purchaseOrder7 = new PurchaseOrder { AmountToPay = 3150.0m, CompanyName = "Company G", PaymentDayTerms = 75, PoNumber = "1932344O" };
             var purchaseOrder8 = new PurchaseOrder { AmountToPay = 3190.0m, CompanyName = "Company H", PaymentDayTerms = 75, PoNumber = "1123457Q" };
-            var purchaseOrder9 = new PurchaseOrder { AmountToPay = 50.0m, CompanyName = "Company I", PaymentDayTerms = 75, PoNumber =   "1595344R" };
+            var purchaseOrder9 = new PurchaseOrder { AmountToPay = 50.0m, CompanyName = "Company I", PaymentDayTerms = 75, PoNumber = "1595344R" };
             var purchaseOrder10 = new PurchaseOrder { AmountToPay = 2150.0m, CompanyName = "Company J", PaymentDayTerms = 75, PoNumber = "656734L" };
 
             CreateConnection();
@@ -65,31 +65,38 @@ namespace RabbitMQ.Examples
         private static void SendPayment(Payment payment)
         {
             SendMessage(payment.Serialize(), "CardPayment");
-            Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", payment.CardNumber, payment.AmountToPay); 
+            Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", payment.CardNumber, payment.AmountToPay);
         }
 
         private static void SendPurchaseOrder(PurchaseOrder purchaseOrder)
         {
             SendMessage(purchaseOrder.Serialize(), "PurchaseOrder");
-            Console.WriteLine(" Purchase Order Sent {0}, ExampleQueue{1}, {2}, {3}", purchaseOrder.CompanyName, purchaseOrder.AmountToPay, purchaseOrder.PaymentDayTerms, purchaseOrder.PoNumber); 
+            Console.WriteLine(" Purchase Order Sent {0}, ExampleQueue{1}, {2}, {3}", purchaseOrder.CompanyName, purchaseOrder.AmountToPay, purchaseOrder.PaymentDayTerms, purchaseOrder.PoNumber);
         }
 
         private static void CreateConnection()
         {
             _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
             _connection = _factory.CreateConnection();
-            _model = _connection.CreateModel();
-            _model.ExchangeDeclare(ExchangeName, "direct");
-            _model.QueueDeclare(CardPaymentQueueName, true, false, false, null);
-            _model.QueueDeclare(PurchaseOrderQueueName, true, false, false, null);
+            _channel = _connection.CreateModel();
 
-            _model.QueueBind(CardPaymentQueueName, ExchangeName, "CardPayment");
-            _model.QueueBind(PurchaseOrderQueueName, ExchangeName, "PurchaseOrder");
+            //type: direct exchange
+            _channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
+
+            //durable: true=> queues are persisted to disk,queues are persisted to disk, if the server ever crashes or resets,
+            //the queue will be persisted and come back to life
+            _channel.QueueDeclare(CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            //Binding: exchange name, the queue name and the routing key
+            //routingKey: determines what queue the message is routed to.
+            _channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName, routingKey: "CardPayment");
+            _channel.QueueBind(queue: PurchaseOrderQueueName, exchange: ExchangeName, routingKey: "PurchaseOrder");
         }
 
         private static void SendMessage(byte[] message, string routingKey)
-        {                       
-            _model.BasicPublish(ExchangeName, routingKey, null, message);          
+        {
+            _channel.BasicPublish(exchange: ExchangeName, routingKey: routingKey, basicProperties: null, body: message);
         }
     }
 }

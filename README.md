@@ -97,7 +97,7 @@ Each exchange is declared with a set of attributes :
 
 - **Name** : name of the queue (255 char max), can be picked by the app, or it can be automatically named by the broker that generates it. 
 
-- **Durable**, whether the queue and messages will survive a broker or a server re-start,queue is persisted to disc. This makes only the queue persistent, and not the messages, durability means the queue will be re-declared once the broker is re-started. If we want the messages to be also persisted, then we have to post persistent messages. Making queues durable does come with additional overhead => decide if the app can't lose messages or not.
+- **Durable**, whether the queue and messages will survive a broker or a server re-start,queue is persisted to disk. This makes only the queue persistent, and not the messages, durability means the queue will be re-declared once the broker is re-started. If we want the messages to be also persisted, then we have to post persistent messages. Making queues durable does come with additional overhead => decide if the app can't lose messages or not.
 
 - **Exclusive**: is used by only one connection, and the queue will be deleted when that connection closes.
 
@@ -163,7 +163,8 @@ IModel channel = connection.CreateModel;
 ```
 
 ```sh
-//Exchanges and queues
+//Exchanges and queues are Idempotent
+//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
 var ExchangeName = channel.ExchangeDeclare ("MyExchange", "direct");
 channel.QueueDeclare("MyQueue");
 channel.QueueBind("MyQueue", ExchangeName ,"");
@@ -188,7 +189,9 @@ _connection = _factory.CreateConnection();
 _channel = _connection.CreateModel(); 
 
 //tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
-//or be re-created when the server is restarted.                     
+//or be re-created when the server is restarted.
+//Exchanges and queues are Idempotent
+//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.                     
  _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);         
 
 ```
@@ -283,7 +286,10 @@ string ExchangeName = "PublishSubscribe_Exchange";
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
 _connection = _factory.CreateConnection();
 _channel = _connection.CreateModel();
+
+//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
 _channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false);
+
 //We are publishing directly to an and exchange any queues that have been bound to that exchange will receive the message
 //No need for routingKey Vs Default exchange (which bears the name of the queue!) 
 _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
@@ -296,7 +302,7 @@ using (_connection = _factory.CreateConnection())
 {
     using (var channel = _connection.CreateModel())
   {
-	//Idempotent operation : if the exchange is already there it won't be created, otherwise it will get created.
+	//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
 	channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
 
 	//this uses a system generated queue name such as amq.gen-qVC1KT9w-plxzpV9MVId9w
@@ -307,9 +313,10 @@ using (_connection = _factory.CreateConnection())
     _consumer = new QueueingBasicConsumer(channel);
 	
 	//consumer has created its own queue, and subscribed itself to the exchange
-	//Now it will receive all messages that are sent to that exchange ("PublishSubscribe_Exchange")
+	//It will receive all messages that are sent to the exchange ("PublishSubscribe_Exchange")
 	//noAck: true =>  No waiting for a message acknowledgement before receiving the next message.
-	//We don't need to as our subscriber application is reading from its own queue (takes msg as it can deal with)
+	//We don't need to as our subscriber application is reading from its own queue 
+	//it takes msg as it can deal with, no work split no load balancing each subscriber will receive the same msg copies
      channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
     
 	while (true)
@@ -322,6 +329,133 @@ using (_connection = _factory.CreateConnection())
 		//channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
     }
   }
+}
+```
+
+### Direct routing
+The **routing key** will be used, so direct messages to a specific consumer (Vs **fanout exchange** where routing key would be ignored). 
+In this example, the producer app will post two different types of messages, **card payment** and **purchase order** messages posted to the exchange, each using specific **routing key**. We create two different **consuming apps** one looking out for **card payments**, and the other is only interested in **purchase orders**. They pick up their messages based on that **routing key**.
+
+![pic](src/RabbitMq/images/figure13.JPG)
+
+**[Publisher](src/RabbitMq/DirectRouting_Publisher/Program.cs)**
+```sh
+string ExchangeName = "DirectRouting_Exchange";
+string CardPaymentQueueName = "CardPaymentDirectRouting_Queue";
+string PurchaseOrderQueueName = "PurchaseOrderDirectRouting_Queue";
+
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+_connection = _factory.CreateConnection();
+_channel = _connection.CreateModel();
+
+ //type: direct exchange
+ //Queues an exchanges are idempotent
+_channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
+
+//durable: true=> queues are persisted to disk, if the server ever crashes or resets,
+//the queue will be persisted and come back to life.
+_channel.QueueDeclare(CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+_channel.QueueDeclare(PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+//Binding: exchange name, the queue name and the routing key
+//routingKey: determines what queue the message is routed to.
+_channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName, routingKey: "CardPayment");
+_channel.QueueBind(queue: PurchaseOrderQueueName, exchange: ExchangeName, routingKey: "PurchaseOrder");
+
+_channel.BasicPublish(exchange: ExchangeName, routingKey: routingKey, basicProperties: null, body: message);
+
+```
+
+**[CardPayment Subscriber](src/RabbitMq/DirectRouting_Subscriber1/Program.cs)**
+
+```sh
+string ExchangeName = "DirectRouting_Exchange";
+string CardPaymentQueueName = "CardPaymentDirectRouting_Queue";
+
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+using (_connection = _factory.CreateConnection())
+{
+    using (var channel = _connection.CreateModel())
+    {
+        //Queue binding to exchange and listen to CardPayment messages
+		//Queues an exchanges are idempotent
+		channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
+        channel.QueueDeclare(queue: CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+        channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName, routingKey: "CardPayment");
+		
+		//tells RabbitMQ to give one message at time per worker,
+		//i.e.  don't dispatch any message to a worker until it has processed and acknowledged the previous one.
+		//otherwise it will dispatch it to the next worker that is not busy
+        channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+		
+		
+		//queuing basic consumer is created 
+        var consumer = new QueueingBasicConsumer(channel);
+		
+		//and basic consumer is called to start reading from the queue
+		//noAck: false => we care that the messages are safe on the queue and we want the message to be acknowledged
+		//in case of the consumer crashes, the message is put back into the queue and eventually later
+		//dispatched to the next iddle worker.
+		//in case of the consumer succeedes Ack is sent back to the broker, message (successfully processed) is discarded 
+		//from the queue and worker is ready to process another one.
+        channel.BasicConsume(queue: CardPaymentQueueName, noAck: false, consumer: consumer);
+
+        while (true)
+        {
+			var ea = consumer.Queue.Dequeue();
+			var message = (Payment)ea.Body.DeSerialize(typeof(Payment));
+			var routingKey = ea.RoutingKey;
+			
+			channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+        }
+    }
+}
+
+
+```
+
+
+**[PurchaseOrder Subscriber](src/RabbitMq/DirectRouting_Subscriber2/Program.cs)**
+
+```sh
+string ExchangeName = "DirectRouting_Exchange";
+string PurchaseOrderQueueName = "PurchaseOrderDirectRouting_Queue";
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+using (_connection = _factory.CreateConnection())
+{
+   //Queue binding to exchange and listen to PurchaseOrder messages
+   //Queues an exchanges are idempotent
+   channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
+   channel.QueueDeclare(queue: PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+   channel.QueueBind(queue: PurchaseOrderQueueName, exchange: ExchangeName, routingKey: "PurchaseOrder");
+
+   //tells RabbitMQ to give one message at time per worker,
+   //i.e.  don't dispatch any message to a worker until it has processed and acknowledged the previous one.
+   //otherwise it will dispatch it to the next worker that is not busy
+   channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+
+   //queuing basic consumer is created 
+   var consumer = new QueueingBasicConsumer(channel);
+
+   //and basic consumer is called to start reading from the queue
+   //noAck: false => we care that the messages are safe on the queue and we want the message to be acknowledged
+   //in case of the consumer crashes, the message is put back into the queue and eventually later
+   //dispatched to the next idle worker.
+   //in case of the consumer succeeded, a Ack is sent back to the broker, message (successfully processed) is discarded 
+   //from the queue and worker is ready to process another one.
+   channel.BasicConsume(queue: PurchaseOrderQueueName, noAck: false, consumer: consumer);
+
+   while (true)
+   {
+       var ea = consumer.Queue.Dequeue();
+       var message = (PurchaseOrder)ea.Body.DeSerialize(typeof(PurchaseOrder));
+       var routingKey = ea.RoutingKey;
+
+       // a Ack is sent back to the broker, message (successfully processed) is discarded 
+       //from the queue and worker is ready to process another one.
+       channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+        }
 }
 ```
 

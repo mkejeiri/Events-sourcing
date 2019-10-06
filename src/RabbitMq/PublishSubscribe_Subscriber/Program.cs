@@ -23,7 +23,8 @@ namespace RabbitMQ.Examples
                     //consumer has created its own queue, and subscribed itself to the exchange
                     //Now it will receive all messages that are sent to that exchange ("PublishSubscribe_Exchange")
                     //noAck: true =>  No waiting for a message acknowledgement before receiving the next message.
-                    //We don't need to as our subscriber application is reading from its own queue ()
+                    //We don't need to as our subscriber application is reading from its own queue =>
+                    //it takes msg as it can deal with, no work split no load balancing each subscriber will receive the same msg copies
                     channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
 
                     while (true)
