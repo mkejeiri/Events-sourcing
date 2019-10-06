@@ -175,6 +175,10 @@ using client API we have one producer posting the payment message onto a "Exampl
 ![pic](src/RabbitMq/images/figure10.JPG)
 
 What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "ExampleQueue" queue to the default exchange using "ExampleQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "ExampleQueue" will be routing to "ExampleQueue" queue.
+
+**Declaring** the **queue** in **RabbitMQ** is an **idempotent operation**, i.e. it will only be created if it doesn't already exist. 
+>> Generally speaking, an item hosting operation is one that has no additional effect if it is called more than once, with the same input parameters. 
+
 ```sh
 string QueueName = "ExampleQueue";
 
@@ -182,9 +186,24 @@ _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", P
 _connection = _factory.CreateConnection();
 _model = _connection.CreateModel(); 
 
-#tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive, or be re-created when the server is restarted.                     
+#tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
+#or be re-created when the server is restarted.                     
 _model.QueueDeclare(QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);    
 
+```
+
+```sh
+#Send message  
+#payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
+ _model.BasicPublish("", QueueName, null, payment.Serialize());
+```
+
+```sh
+#receive message              
+_model.BasicConsume(QueueName, true, consumer);
+
+# DeSerialize is user-defined extension method 
+ var message = (Payment)consumer.Queue.Dequeue().Body.DeSerialize(typeof(Payment));
 ```
 
 # II) Events-sourcing
