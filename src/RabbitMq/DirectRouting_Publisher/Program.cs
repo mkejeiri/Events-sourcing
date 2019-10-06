@@ -65,13 +65,13 @@ namespace RabbitMQ.Examples
         private static void SendPayment(Payment payment)
         {
             SendMessage(payment.Serialize(), "CardPayment");
-            Console.WriteLine(" Payment Sent {0}, £{1}", payment.CardNumber, payment.AmountToPay); 
+            Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", payment.CardNumber, payment.AmountToPay); 
         }
 
         private static void SendPurchaseOrder(PurchaseOrder purchaseOrder)
         {
             SendMessage(purchaseOrder.Serialize(), "PurchaseOrder");
-            Console.WriteLine(" Purchase Order Sent {0}, £{1}, {2}, {3}", purchaseOrder.CompanyName, purchaseOrder.AmountToPay, purchaseOrder.PaymentDayTerms, purchaseOrder.PoNumber); 
+            Console.WriteLine(" Purchase Order Sent {0}, ExampleQueue{1}, {2}, {3}", purchaseOrder.CompanyName, purchaseOrder.AmountToPay, purchaseOrder.PaymentDayTerms, purchaseOrder.PoNumber); 
         }
 
         private static void CreateConnection()

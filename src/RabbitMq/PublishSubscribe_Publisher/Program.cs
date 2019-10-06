@@ -9,7 +9,7 @@ namespace RabbitMQ.Examples
     {
         private static ConnectionFactory _factory;
         private static IConnection _connection;
-        private static IModel _model;
+        private static IModel _channel;
 
         private const string ExchangeName = "PublishSubscribe_Exchange";
 
@@ -46,14 +46,14 @@ namespace RabbitMQ.Examples
         {
             _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
             _connection = _factory.CreateConnection();
-            _model = _connection.CreateModel();
-            _model.ExchangeDeclare(ExchangeName, "fanout", false);
+            _channel = _connection.CreateModel();
+            _channel.ExchangeDeclare(ExchangeName, "fanout", false);
         }
 
         private static void SendMessage(Payment message)
         {           
-            _model.BasicPublish(ExchangeName, "", null, message.Serialize());
-            Console.WriteLine(" Payment Sent {0}, £{1}", message.CardNumber, message.AmountToPay);             
+            _channel.BasicPublish(ExchangeName, "", null, message.Serialize());
+            Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", message.CardNumber, message.AmountToPay);             
         }
     }
 }

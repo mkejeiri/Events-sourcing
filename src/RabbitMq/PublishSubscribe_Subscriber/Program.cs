@@ -19,7 +19,7 @@ namespace RabbitMQ.Examples
                 using (var channel = _connection.CreateModel())
                 {
                     var queueName = DeclareAndBindQueueToExchange(channel);
-                    channel.BasicConsume(queueName, true, _consumer);
+                    channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
 
                     while (true)
                     {
@@ -35,9 +35,9 @@ namespace RabbitMQ.Examples
 
         private static string DeclareAndBindQueueToExchange(IModel channel)
         {
-            channel.ExchangeDeclare(ExchangeName, "fanout");
+            channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
             var queueName = channel.QueueDeclare().QueueName;
-            channel.QueueBind(queueName, ExchangeName, "");
+            channel.QueueBind(queue: queueName, exchange: ExchangeName, routingKey: "");
             _consumer = new QueueingBasicConsumer(channel);
             return queueName;
         }

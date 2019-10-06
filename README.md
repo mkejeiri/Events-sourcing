@@ -156,56 +156,159 @@ The core API interface and classes are defined in the **RabbitMQ.Client namespac
 - **QueuingBasicConsumer**: receives messages delivered from the server.
 
 ```sh
-#Connecting to a message Broker
+//Connecting to a message Broker
 ConnectionFactory factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
 IConnection connection = factory.CreateConnection;
 IModel channel = connection.CreateModel;
 ```
 
 ```sh
-#Exchanges and queues
+//Exchanges and queues
 var ExchangeName = channel.ExchangeDeclare ("MyExchange", "direct");
 channel.QueueDeclare("MyQueue");
 channel.QueueBind("MyQueue", ExchangeName ,"");
 ```
 
 ### Example of a Standard Queue 
-using client API we have one producer posting the payment message onto a "ExampleQueue" queue, and one consumer reading that message from the "ExampleQueue" queue. It looks like the producer posts directly onto the "ExampleQueue" queue, instead of using an exchange. 
+using client API we have one producer posting the payment message onto a "StandardQueue" queue, and one consumer reading that message from the "StandardQueue" queue. It looks like the producer posts directly onto the "StandardQueue" queue, instead of using an exchange. 
 
 ![pic](src/RabbitMq/images/figure10.JPG)
 
-What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "ExampleQueue" queue to the default exchange using "ExampleQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "ExampleQueue" will be routing to "ExampleQueue" queue.
+What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "StandardQueue" queue to the default exchange using "StandardQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "StandardQueue" will be routing to "StandardQueue" queue.
 
 **Declaring** the **queue** in **RabbitMQ** is an **idempotent operation**, i.e. it will only be created if it doesn't already exist. 
 >> Generally speaking, an item hosting operation is one that has no additional effect if it is called more than once, with the same input parameters. 
 
 
 ```sh
-string QueueName = "ExampleQueue";
+string QueueName = "StandardQueue";
 
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest"};
 _connection = _factory.CreateConnection();
 _channel = _connection.CreateModel(); 
 
-#tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
-#or be re-created when the server is restarted.                     
-_channel.QueueDeclare(QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);    
+//tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
+//or be re-created when the server is restarted.                     
+ _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);         
 
 ```
 
 ```sh
-#Send message  
-#payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
- _channel.BasicPublish("", QueueName, null, payment.Serialize());
+//Send message  
+//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
+ channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
 ```
 
 ```sh
-#receive message              
-_channel.BasicConsume(QueueName, true, consumer);
+//receive message              
+ _channel.BasicConsume(queue: QueueName, noAck: true, consumer);
 
-# DeSerialize is user-defined extension method 
+//DeSerialize is user-defined extension method 
  var message = (Payment)consumer.Queue.Dequeue().Body.DeSerialize(typeof(Payment));
 ```
+>> Consumers last so long as the channel they were declared on, or until the client cancels them.
+
 [more ...](src/RabbitMq/StandardQueue/Program.cs)
+
+
+### Example of a Multiple Queues (i.e Worker Queue or multiple consumers) 
+The idea is that messages from the queue are shared between one or more consumers, it commonly used when you want to share the load, between consumers when processing higher volumes of messages.
+![pic](src/RabbitMq/images/figure11.JPG)
+
+**Producer**
+```sh
+string QueueName = "WorkerQueue_Queue";
+
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest"};
+_connection = _factory.CreateConnection();
+_channel = _connection.CreateModel(); 
+
+//tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
+//or be re-created when the server is restarted.                     
+ _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);        
+
+```
+
+```sh
+//Send message  
+//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
+ channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
+```
+[more on producer ...](src/RabbitMq/WorkerQueue_Producer/Program.cs)
+
+**Consumer**
+ 
+```sh
+//(Spec method) Configures Quality Of Service parameters of the Basic content-class.
+channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+var consumer = new QueueingBasicConsumer(channel);
+//we want to expect an acknowledgement message (noAck: false)
+channel.BasicConsume(queue: QueueName, noAck: false, consumer: consumer);
+
+```
+
+```sh
+while (true)
+{
+	var ea = consumer.Queue.Dequeue();
+	
+	//once we have the message, and have acted on it, we will send a delivery acknowledgement next
+	var message = (Payment)ea.Body.DeSerialize(typeof(Payment));
+		
+    //This tells the message broker that we are finished processing the message,
+    //and we are ready to start processing the next message when it is ready.
+	//the next message will not be received by this consumer, until it sends this delivery acknowledgement. 
+	//acknowledgement sent to the RabbitMQ server, meaning we've finished with that message, and it can discard it from the queue
+	channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+}
+
+```
+>> prefetchCount: 1 (load balancing among workers) means that RabbitMQ won't dispatch a new message to a consumer, until that consumer is finished processing and acknowledged the message, if a worker is busy (noAck) RabbitMQ will dispatch a message on the next worker that is not busy.
+
+
+[more on consumer ...](src/RabbitMq/WorkerQueue_Consumer/Program.cs)
+
+
+### Publish and Subscribe queues
+The messages are sent from the exchange to all consumers that are **bound to the exchange**. i.e. the messages are not picked up by multiple consumers to distribute load, but instead all subscribed consumers with interest in receiving the messages. Unlike the previous example where we defined the **queue directly** which's use a **default exchange** (with routingKey = queue_name) behind the scenes, here we will set up an explicit **Fanout** exchange. A **fanout exchange** routes messages to all of the queues that are bound to it(i.e. routing key is ignored). 
+
+![pic](src/RabbitMq/images/figure12.JPG)
+
+**Publisher**
+>> If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
+
+```sh
+string ExchangeName = "PublishSubscribe_Exchange";
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+_connection = _factory.CreateConnection();
+_channel = _connection.CreateModel();
+_channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false);
+_channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
+```
+**Subscriber**
+
+```sh
+string ExchangeName = "PublishSubscribe_Exchange";
+_factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+using (_connection = _factory.CreateConnection())
+{
+    using (var channel = _connection.CreateModel())
+  {
+    channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
+    var queueName = channel.QueueDeclare().QueueName;
+    channel.QueueBind(queue: queueName, exchange: ExchangeName, routingKey: "");
+    _consumer = new QueueingBasicConsumer(channel);
+     channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
+    while (true)
+    {
+        var ea = _consumer.Queue.Dequeue();
+        var message = (Payment)ea.Body.DeSerialize(typeof(Payment));
+    }
+  }
+}
+```
+
+
 
 # II) Events-sourcing

@@ -7,7 +7,7 @@ namespace RabbitMQ.Examples
     {
         private static ConnectionFactory _factory;
         private static IConnection _connection;
-        private static IModel _model;
+        private static IModel _channel;
         
         private const string QueueName = "WorkerQueue_Queue";
 
@@ -44,15 +44,15 @@ namespace RabbitMQ.Examples
         {
             _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
             _connection = _factory.CreateConnection();
-            _model = _connection.CreateModel();
+            _channel = _connection.CreateModel();
             
-            _model.QueueDeclare(QueueName, true, false, false, null);
+            _channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
         }
 
         private static void SendMessage(Payment message)
         {                        
-            _model.BasicPublish("", QueueName, null, message.Serialize());
-            Console.WriteLine(" Payment Sent {0}, £{1}", message.CardNumber, message.AmountToPay);                
+            _channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: message.Serialize());
+            Console.WriteLine(" Payment Sent {0}, ExampleQueue{1}", message.CardNumber, message.AmountToPay);                
         }
     }
 }

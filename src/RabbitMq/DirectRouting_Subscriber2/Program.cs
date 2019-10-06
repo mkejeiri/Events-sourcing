@@ -33,7 +33,7 @@ namespace RabbitMQ.Examples
                         var routingKey = ea.RoutingKey;
                         channel.BasicAck(ea.DeliveryTag, false);
 
-                        Console.WriteLine("-- Purchase Order - Routing Key <{0}> : {1}, £{2}, {3}, {4}", routingKey, message.CompanyName, message.AmountToPay, message.PaymentDayTerms, message.PoNumber); 
+                        Console.WriteLine("-- Purchase Order - Routing Key <{0}> : {1}, ExampleQueue{2}, {3}, {4}", routingKey, message.CompanyName, message.AmountToPay, message.PaymentDayTerms, message.PoNumber); 
                     }
                 }
             }
