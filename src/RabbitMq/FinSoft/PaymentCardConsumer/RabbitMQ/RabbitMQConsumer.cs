@@ -50,6 +50,7 @@ namespace PaymentCardConsumer.RabbitMQ
                     //If any of those messages are not acknowledged when they are finished processing, then they will
                     //be put back onto the queue ready for another consumer to process them
                     channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                    //channel.BasicQos(prefetchSize: 0, prefetchCount: 10, global: false);
 
                     //Subscription is a high level abstraction that has a more natural iterator feel to it.
                     //To use it we simply create a new instance and supply the channel
