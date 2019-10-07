@@ -31,12 +31,28 @@ namespace Payments.RabbitMQ
         {
             _connection.Close();
         }
+        /*
+         The client application posts messages directly onto a queue. 
+         For each message that gets posted, the application waits for a reply from a reply queue. 
+         This essentially makes this a synchronous process. 
+         */
 
         public string MakePayment(CardPayment payment)
         {
             var corrId = Guid.NewGuid().ToString();
             var props = _channel.CreateBasicProperties();
             props.ReplyTo = _replyQueueName;
+
+         /*
+          When a message is posted to the server from the client, 
+         a correlation ID is generated and attached to the message properties. 
+         The same correlation ID is put onto the properties in a reply message. 
+         This is  useful, as it allows you to easily tie together the replies in 
+         the original 18 messages if you store them for retrieval later.
+         The client posts a message to the RPC queue that has a correlation ID of e.g. 12345. 
+         This message is received by the server and a reply is sent back to the client 
+         on a reply queue with the same correlation ID of e.g 12345. 
+         */
             props.CorrelationId = corrId;
 
             _channel.BasicPublish(exchange: "", routingKey: "rpc_queue", basicProperties: props, body: payment.Serialize());
