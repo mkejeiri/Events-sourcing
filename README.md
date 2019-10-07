@@ -50,7 +50,7 @@ for the management and monitoring of the RabbitMQ server:
 ### How's that work?
 a message protocol works by receiving messages from a client or publisher and broker routes a message to a receiving application or consumer via an exchange, which acts as a mailbox, it sends a message to a queue by using different rules called bindings (direct routing, fanout, topic, headers) all within the message broker which delivers the message from the queue to a consumer.
 The consumer (subscriber to the queue) pulls out the queue when a message is published, a publisher can specify various different messaging attributes which will be used by the message broker.
-![pic](src/RabbitMq/images/figure1.JPG)
+![pic](src/RabbitMq/Examples/images/figure1.JPG)
 #### Message acknowledgements
 The AMQP protocol has a mechanism for message acknowledgements (ACK) to deal with network unreliability and app failures; when a message is delivered to a consuming application, the consumer notifies the broker, either automatically, or as soon as the app developer decide so. 
 When message ACK are used, the message broker will only remove the message from the queue when it receives a notification for that message. If a user messages are routed by the routing key (acts like a filter), it cannot be routed anywhere, it can either be returned to the sender, dropped, or if configured, be placed on a dead letter queue which is monitored.
@@ -65,19 +65,19 @@ When message ACK are used, the message broker will only remove the message from 
 **Types of exchanges**:
 
 - **Direct exchanges**: queue binds to the exchange using a routing key, ideal for publishing a message onto just one queue  (message and queue keys must match)
-![pic](src/RabbitMq/images/figure2.JPG)
+![pic](src/RabbitMq/Examples/images/figure2.JPG)
  e.g. used to distribute messages between multiple work processes in a round robin manner
 
 - **Fanout exchanges**: routes messages to all queues that are bound to it (routing key is ignored = broadcast), ideal for the broadcast
-![pic](src/RabbitMq/images/figure3.JPG)
+![pic](src/RabbitMq/Examples/images/figure3.JPG)
  e.g sync online game scores, weather updates, chat sessions between groups of people
 
 - **Topic exchanges**: one or many queues based on pattern matches between the message routing key
-![pic](src/RabbitMq/images/figure4.JPG)
+![pic](src/RabbitMq/Examples/images/figure4.JPG)
 e.g. multi-card/wild carded routing key  of messages to different queues. If * hash are used in binding then topic exchanges = fanout exchanges, if not used then topic exchanges = direct exchanges  
 
 - **Header exchanges**: routing of multiple attributes that are expressed in headers (i.e. routing key/queue is ignored = only express one piece of information)
-![pic](src/RabbitMq/images/figure5.JPG)
+![pic](src/RabbitMq/Examples/images/figure5.JPG)
 **Header exchanges** looks like a supercharged direct exchanges, as the routing is based on header values (also used as direct exchanges when routing key is not string)
 
 Each exchange is declared with a set of attributes :
@@ -105,7 +105,7 @@ Each exchange is declared with a set of attributes :
 
 **bindings** are defined when we need to define rules that specify how messages are routed from exchanges to queues, they may have an optional routing key attribute that is used by some exchange types to route messages from the exchange to the queue.
 
-![pic](src/RabbitMq/images/figure6.JPG)
+![pic](src/RabbitMq/Examples/images/figure6.JPG)
 
 If an **AMQP message** cannot be routed to any queue (e.g. missing valid binding from the exchange to that queue) then it either dropped, or returned to the publisher, depending on the message attributes the publisher has set.
 
@@ -115,18 +115,18 @@ If an **AMQP message** cannot be routed to any queue (e.g. missing valid binding
 **Consumers/subscribers with a set of queues**
 Let assume an apps will register as **consumers/subscribers** to a **set of queues**, a common  scenario will be to balance a load of apps feeding from the queues in a high volume scenario. When a consuming application acts on a message from the queue, it is possible that a problem could occur and lead into a message lose, further, when an app acts on a message, that message is removed from the queue, but we need to make sure that the message has been successfully processed before that to happen. 
 
-![pic](src/RabbitMq/images/figure7.JPG)
+![pic](src/RabbitMq/Examples/images/figure7.JPG)
 
 
 The **AMQP protocol** gives a set of options to **remedy** that situations (i.e. when a message is removed from the queue):
 - The **message is removed** once a **broker** has sent the **message** to the **application**.
 - Or, the **message is removed** once the **application** is sent an **acknowledgement message** back to the **broker**.
 
-![pic](src/RabbitMq/images/figure8.JPG)
+![pic](src/RabbitMq/Examples/images/figure8.JPG)
 
 With an **explicit acknowledgement**, it is up to the **app** to decide when to **remove the message** from that **queue** (received a message, or finished processing it. 
 
-![pic](src/RabbitMq/images/figure9.JPG)
+![pic](src/RabbitMq/Examples/images/figure9.JPG)
 
 If the consuming **app crashes before** the **acknowledgement** has been sent, then a **message broker** will try to **redeliver** the message to another consumer. When an app **processes a message**, that processing may or may not succeed. If the processing fails for any reason(e.g. database time outs), then a consumer app can reject the message. The app then can ask the broker to discard the message or re-queue it. 
 
@@ -173,7 +173,7 @@ channel.QueueBind("MyQueue", ExchangeName ,"");
 ### Example of a Standard Queue 
 using client API we have one producer posting the payment message onto a "StandardQueue" queue, and one consumer reading that message from the "StandardQueue" queue. It looks like the producer posts directly onto the "StandardQueue" queue, instead of using an exchange. 
 
-![pic](src/RabbitMq/images/figure10.JPG)
+![pic](src/RabbitMq/Examples/images/figure10.JPG)
 
 What happens is under the covers we are posting to the **default exchange**; **RabbitMQ broker** will bind "StandardQueue" queue to the default exchange using "StandardQueue" (name of the queue) as the rooting key. Therefore a message publishes to the default exchange with the routing key "StandardQueue" will be routing to "StandardQueue" queue.
 
@@ -216,7 +216,7 @@ _channel = _connection.CreateModel();
 
 ### Example of a Multiple Queues (i.e. Worker Queue or multiple consumers) 
 The idea is that messages from the queue are shared between one or more consumers, it commonly used when we want to share the load, between consumers when processing higher volumes of messages.
-![pic](src/RabbitMq/images/figure11.JPG)
+![pic](src/RabbitMq/Examples/images/figure11.JPG)
 
 **Producer**
 ```sh
@@ -276,7 +276,7 @@ while (true)
 ### Publish and Subscribe queues
 The messages are sent from the exchange to all consumers that are **bound to the exchange**. i.e. the messages are not picked up by multiple consumers to distribute load, but instead all subscribed consumers with interest in receiving the messages. Unlike the previous example where we defined the **queue directly** which's use a **default exchange** (with routingKey = queue_name) behind the scenes, here we will set up an explicit **Fanout** exchange. A **fanout exchange** routes messages to all of the queues that are bound to it(i.e. routing key is ignored). 
 
-![pic](src/RabbitMq/images/figure12.JPG)
+![pic](src/RabbitMq/Examples/images/figure12.JPG)
 
 **[Publisher](src/RabbitMq/PublishSubscribe_Publisher/Program.cs)**
 > If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
@@ -336,7 +336,7 @@ using (_connection = _factory.CreateConnection())
 The **routing key** will be used, so direct messages to a specific consumer (Vs **fanout exchange** where routing key would be ignored). 
 In this example, the producer app will post two different types of messages, **card payment** and **purchase order** messages posted to the exchange, each using specific **routing key**. We create two different **consuming apps** one looking out for **card payments**, and the other is only interested in **purchase orders**. They pick up their messages based on that **routing key**.
 
-![pic](src/RabbitMq/images/figure13.JPG)
+![pic](src/RabbitMq/Examples/images/figure13.JPG)
 
 **[Publisher](src/RabbitMq/DirectRouting_Publisher/Program.cs)**
 ```sh
