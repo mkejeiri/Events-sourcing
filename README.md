@@ -218,7 +218,8 @@ _channel = _connection.CreateModel();
 The idea is that messages from the queue are shared between one or more consumers, it commonly used when we want to share the load, between consumers when processing higher volumes of messages.
 ![pic](src/RabbitMq/Examples/images/figure11.JPG)
 
-**Producer**
+
+**[Producer](src/RabbitMq/Examples/WorkerQueue_Producer/Program.cs)**
 ```sh
 string QueueName = "WorkerQueue_Queue";
 
@@ -237,10 +238,8 @@ _channel = _connection.CreateModel();
 //payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
  channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
 ```
-[more on producer ...](src/RabbitMq/Examples/WorkerQueue_Producer/Program.cs)
 
-**Consumer**
- 
+ **[Consumer](src/RabbitMq/Examples/WorkerQueue_Consumer/Program.cs)**
 ```sh
 //(Spec method) Configures Quality Of Service parameters of the Basic content-class.
 channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
@@ -270,7 +269,7 @@ while (true)
 > prefetchCount: 1 (load balancing among workers) means that RabbitMQ won't dispatch a new message to a consumer, until that consumer is finished processing and acknowledged the message, if a worker is busy (noAck) RabbitMQ will dispatch a message on the next worker that is not busy.
 
 
-[more on consumer ...](src/RabbitMq/Examples/WorkerQueue_Consumer/Program.cs)
+
 
 
 ### Publish and Subscribe queues
