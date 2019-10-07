@@ -211,7 +211,7 @@ _channel = _connection.CreateModel();
 ```
 > Consumers last so long as the channel they were declared on, or until the client cancels them.
 
-[more ...](src/RabbitMq/StandardQueue/Program.cs)
+[more ...](src/RabbitMq/Examples/StandardQueue/Program.cs)
 
 
 ### Example of a Multiple Queues (i.e. Worker Queue or multiple consumers) 
@@ -237,7 +237,7 @@ _channel = _connection.CreateModel();
 //payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
  channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
 ```
-[more on producer ...](src/RabbitMq/WorkerQueue_Producer/Program.cs)
+[more on producer ...](src/RabbitMq/Examples/WorkerQueue_Producer/Program.cs)
 
 **Consumer**
  
@@ -270,7 +270,7 @@ while (true)
 > prefetchCount: 1 (load balancing among workers) means that RabbitMQ won't dispatch a new message to a consumer, until that consumer is finished processing and acknowledged the message, if a worker is busy (noAck) RabbitMQ will dispatch a message on the next worker that is not busy.
 
 
-[more on consumer ...](src/RabbitMq/WorkerQueue_Consumer/Program.cs)
+[more on consumer ...](src/RabbitMq/Examples/WorkerQueue_Consumer/Program.cs)
 
 
 ### Publish and Subscribe queues
@@ -278,7 +278,7 @@ The messages are sent from the exchange to all consumers that are **bound to the
 
 ![pic](src/RabbitMq/Examples/images/figure12.JPG)
 
-**[Publisher](src/RabbitMq/PublishSubscribe_Publisher/Program.cs)**
+**[Publisher](src/RabbitMq/Examples/PublishSubscribe_Publisher/Program.cs)**
 > If queues are bound to a fanout exchange, when a message is published onto that exchange a copy of that message is delivered to all those queues.
 
 ```sh
@@ -294,7 +294,7 @@ _channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false)
 //No need for routingKey Vs Default exchange (which bears the name of the queue!) 
 _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
 ```
-**[Subscriber](src/RabbitMq/PublishSubscribe_Subscriber/Program.cs)**
+**[Subscriber](src/RabbitMq/Examples/PublishSubscribe_Subscriber/Program.cs)**
 ```sh
 string ExchangeName = "PublishSubscribe_Exchange";
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
@@ -338,7 +338,7 @@ In this example, the producer app will post two different types of messages, **c
 
 ![pic](src/RabbitMq/Examples/images/figure13.JPG)
 
-**[Publisher](src/RabbitMq/DirectRouting_Publisher/Program.cs)**
+**[Publisher](src/RabbitMq/Examples/DirectRouting_Publisher/Program.cs)**
 ```sh
 string ExchangeName = "DirectRouting_Exchange";
 string CardPaymentQueueName = "CardPaymentDirectRouting_Queue";
@@ -366,7 +366,7 @@ _channel.BasicPublish(exchange: ExchangeName, routingKey: routingKey, basicPrope
 
 ```
 
-**[CardPayment Subscriber](src/RabbitMq/DirectRouting_Subscriber1/Program.cs)**
+**[CardPayment Subscriber](src/RabbitMq/Examples/DirectRouting_Subscriber1/Program.cs)**
 
 ```sh
 string ExchangeName = "DirectRouting_Exchange";
@@ -415,7 +415,7 @@ using (_connection = _factory.CreateConnection())
 ```
 
 
-**[PurchaseOrder Subscriber](src/RabbitMq/DirectRouting_Subscriber2/Program.cs)**
+**[PurchaseOrder Subscriber](src/RabbitMq/Examples/DirectRouting_Subscriber2/Program.cs)**
 
 ```sh
 string ExchangeName = "DirectRouting_Exchange";
