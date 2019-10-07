@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using Payments.Models;
 using RabbitMQ.Client;
-
+/*
+    RabbitMQ message broker where the API layer will post messages for processing
+ */
 namespace Payments.RabbitMQ
 {
     public class RabbitMQClient
@@ -32,7 +34,7 @@ namespace Payments.RabbitMQ
 
             _connection = _factory.CreateConnection();
             _model = _connection.CreateModel();
-            _model.ExchangeDeclare(exchange:ExchangeName, type:"topic");
+            _model.ExchangeDeclare(exchange: ExchangeName, type: "topic");
 
             _model.QueueDeclare(queue: CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
             _model.QueueDeclare(queue: PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
@@ -59,7 +61,7 @@ namespace Payments.RabbitMQ
 
         public void SendPurchaseOrder(PurchaseOrder purchaseOrder)
         {
-            SendMessage(purchaseOrder.Serialize(), routingKey:"payment.purchaseorder");
+            SendMessage(purchaseOrder.Serialize(), routingKey: "payment.purchaseorder");
 
             Console.WriteLine(" Purchase Order Sent {0}, £{1}, {2}, {3}",
                 purchaseOrder.CompanyName, purchaseOrder.AmountToPay,

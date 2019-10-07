@@ -2,7 +2,9 @@
 using System.Text;
 using Payments.Models;
 using RabbitMQ.Client;
-
+/*
+    RabbitMQ message broker where the API layer will post messages for processing
+ */
 namespace Payments.RabbitMQ
 {
     public class RabbitMQDirectClient
