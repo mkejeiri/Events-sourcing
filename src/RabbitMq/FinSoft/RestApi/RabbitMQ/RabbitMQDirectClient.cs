@@ -20,7 +20,8 @@ namespace Payments.RabbitMQ
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            _replyQueueName = _channel.QueueDeclare(queue: "rpc_reply", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            _replyQueueName = _channel.QueueDeclare(queue: "rpc_reply", durable: true, exclusive: false,
+                autoDelete: false, arguments: null);
 
             _consumer = new QueueingBasicConsumer(_channel);
             _channel.BasicConsume(queue: _replyQueueName, noAck: true, consumer: _consumer);
