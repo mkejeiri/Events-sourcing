@@ -522,7 +522,7 @@ These two different **modes of communication** that can enable two different **s
 	- Event-based systems by their nature are asynchronous. This means that the processing of these messages doesn't need to be centralized in any one place. Instead, we can have many consumers to process messages. e.g. we have multiple consumers working on the messages.
 	- Event-based collaboration is also highly decoupled. The client that emits an event doesn't have any way of knowing who or what will react to it, which also means that you can add new subscribers to the event without the client ever needing to know. 
 	
-### [Setting up the RabbitMQ Management Portal] (https://www.rabbitmq.com/management.html)
+### [Setting up the RabbitMQ Management Portal](https://www.rabbitmq.com/management.html)
 
 ```sh
 #open cmd or powershell
