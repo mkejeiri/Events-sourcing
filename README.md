@@ -528,6 +528,30 @@ These two different **modes of communication** that can enable two different **s
 #open cmd or powershell
 rabbitmq-plugins enable rabbitmq_management
 ```
+### [Topic Based Publisher and Subscribe](src/RabbitMq/FinSoft)
+The **direct** message **exchange** type use routing key to route messages to different consumers or subscribers, The **topic exchange** is similar and more powerful to use. Messages sent on topic exchange don't just have an arbitrary routing key as before. The **routing key** must be a list of words separated by **"."** and eventually a wild card **('star')**, the words (limit of **255 bytes**) can be anything that specifies some features connected to the message.
+
+![pic](src/RabbitMq/Examples/images/figure14.JPG)
+
+A message sent by a particular **routing key** will be delivered to all the **queues** that are **bound** with a **matching key**; Two important **special cases** for **binding keys** :
+- **'star'** can be substituted for exactly one word, 
+- **'hash'** can be substituted for zero or more words.
+
+```
+payment.* : consumer is interested in any message that starts with payment.
+```
+### Remote Procedure Calls
+An example is when we post the message onto a queue, a consumer act on the message, and then a reply is posted back via the queue to the original producer application.
+
+**[The sample project](src/RabbitMq/FinSoft)** is split into: 
+- A **[client](src/RabbitMq/FinSoft/RestApi/Controllers/DirectCardPaymentController.cs)**, which is our web API : The client application posts messages directly onto a queue. For each message that gets posted, the application waits for a reply from a reply queue. This essentially makes this a synchronous process.
+
+- **[server](src/RabbitMq/FinSoft/DirectPaymentCardConsumer/RabbitMQ/RabbitMQConsumer.cs)** which is the consumer: When a message is posted to the server from the client, a correlation ID is generated and
+attached to the message properties. The same correlation ID is put onto the properties in a reply message. This allows us to easily tie together the replies in the originating messages if you store them for retrieval later. 
+
+![pic](src/RabbitMq/Examples/images/figure15.JPG)
+
+> The client posts a message to the RPC queue that has a correlation ID of 12345. This message is received by the server and a reply is sent back to the client on a reply queue with the same correlation ID of 12345.
 
 # II) Events-sourcing
 

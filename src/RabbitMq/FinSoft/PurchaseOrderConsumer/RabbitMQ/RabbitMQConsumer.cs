@@ -47,9 +47,10 @@ namespace PurchaseOrderConsumer.RabbitMQ
                     //Subscription is a high level abstraction that has a more natural iterator feel to it.
                     //To use it we simply create a new instance and supply the channel
                     //and the queue which we want to get the messages from.
+                    //noAck: false => consumer will acknowledge when it finishes processing
                     Subscription subscription = new Subscription(model: channel, queueName: PurchaseOrderQueueName, noAck: false);
 
-                    while (true)
+                    while (true) //run an infinite loop to listen to messages in the queue
                     {
                         //we enter a while called next and the subscriptions get the next message
                         BasicDeliverEventArgs deliveryArguments = subscription.Next();

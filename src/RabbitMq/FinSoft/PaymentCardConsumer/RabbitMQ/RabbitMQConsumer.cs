@@ -38,34 +38,36 @@ namespace PaymentCardConsumer.RabbitMQ
                     Console.WriteLine("-----------------------------------------");
                     Console.WriteLine();
 
+                    //idempotent operation: if the exchange already exists then it won't be recreated
                     channel.ExchangeDeclare(exchange: ExchangeName, type: "topic");
+
+                    //idempotent operation
                     channel.QueueDeclare(queue: CardPaymentQueueName,
                         durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                     channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName,
                         routingKey: "payment.cardpayment");
 
-                    //the basic Qos with a prefix count of one.
-                    //This means a consumer will reserve one message after queue to process at a time
-                    //If any of those messages are not acknowledged when they are finished processing, then they will
-                    //be put back onto the queue ready for another consumer to process them
+                    //the basic Qos with a prefix count = 1, i.e. consumer will reserve one message after queue
+                    //to process at a time, If any of those messages are not acknowledged when they are finished processing,
+                    //then they will be put back onto the queue ready for another consumer to process them.
                     channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                     //channel.BasicQos(prefetchSize: 0, prefetchCount: 10, global: false);
 
                     //Subscription is a high level abstraction that has a more natural iterator feel to it.
                     //To use it we simply create a new instance and supply the channel
                     //and the queue which we want to get the messages from.
+                    //noAck: false => consumer will acknowledge when it finishes processing
                     Subscription subscription = new Subscription(model: channel,
                         queueName: CardPaymentQueueName, noAck: false);
 
-                    while (true)
+                    while (true) //run an infinite loop to listen to messages in the queue
                     {
                         //we enter a while called next and the subscriptions get the next message
                         BasicDeliverEventArgs deliveryArguments = subscription.Next();
 
                         //The serialized message throughout the card payment or (a purchase order if it is a purchase order consumer).
-                        var message =
-                            (CardPayment)deliveryArguments.Body.DeSerialize(typeof(CardPayment));
+                        var message = (CardPayment)deliveryArguments.Body.DeSerialize(typeof(CardPayment));
 
                         var routingKey = deliveryArguments.RoutingKey;
 

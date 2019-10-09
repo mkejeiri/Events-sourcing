@@ -20,6 +20,8 @@ namespace Payments.Controllers
             {
                 RabbitMQClient client = new RabbitMQClient();
                 client.SendPayment(payment);
+
+                //RabbitMQ closes the connection
                 client.Close();
             }
             catch (Exception)
