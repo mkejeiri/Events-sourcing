@@ -653,7 +653,8 @@ a single task or features of the business, they neither share implementation cod
 	
 - **[REST](https://martinfowler.com/articles/richardsonMaturityModel.html)** (Representational State Transfer): is using the semantics of the transport protocol, commonly used protocol is HTTP. One of the properties is that the methods in the service are not directly exposed, all resources like data are available as specific URIs, and want to do with it is partly determined by how the call to the URI is made (HTTP verb such as Get, Post, Put, Delete).
 
-[pic](https://martinfowler.com/articles/images/richardsonMaturityModel/overview.png)
+
+![pic](https://martinfowler.com/articles/images/richardsonMaturityModel/overview.png)
 
 >> Swamp of POX, where POX stands for Plain Old XML which refers to RPC with SOAP, where RPC is mostly ignoring the underlying protocol such TCP.
 
