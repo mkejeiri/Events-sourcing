@@ -627,7 +627,7 @@ The **Eight Fallacies of Distributed Computing** by Peter Deutsch:
 
 *3.	Bandwidth is infinite*
 
-*.	The network is secure*
+*4.	The network is secure*
 
 *5.	Topology doesn't change*
 
