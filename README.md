@@ -593,3 +593,55 @@ application where everything is contained in a single program using one technolo
 - Monolith is limited to one **technology stack**.
 
 
+## Distributed Applications
+applications or software that runs on multiple computers within a network at the same time and can be stored on servers or with cloud computing
+
+**Important concepts** to keep in mind :
+
+- **High cohesion**: the pieces of functionality that relate to each other should stick together in a service and unrelated pieces should be pushed outside.
+
+- **Loose coupling**:in order to talk to the other services we must hide as much complexity as possible within the service and expose as less as possible through an interface (or **Contract**), e.g. ability to change some logic within one service without disrupting other services, and to have to **redeploy** all other services.
+
+>> Domain Driven Design help us to find bounderies through the Bounded context.
+
+
+**Coupling** is the way different services depend on each other:
+
+- **Platform** coupling: a service can only be called by an app built with the same technology, e.g. ties all current and future  development within an organization to one particular platform.
+
+- **Behavioral** coupling: a caller has to know exactly the **method name** (+ any possible **parameters**) it's calling, e.g. change the way the service is called and all surrounding services have to be **re-adjusted and redeployed**.
+
+- **Temporal** coupling: refers to an SOA app as a whole can't function when one (or several) service is down. e.g. calls are handled synchronously and server is waiting for response and services architecture rely on each other services to be up & running, it brings the following issues :
+
+	- How is the user notified of the error
+	- how do we roll back the other services
+	- how do we handle retries
+
+>> Note that this has nothing to do with synchronous or asynchronous code, like the async and wait syntax in C#, Using that pattern, resources for the web server are made available for other requests while our servers do their work, but the user still has to wait for them all to complete!
+
+
+The **Eight Fallacies of Distributed Computing** by Peter Deutsch
+1.	The network is reliable
+
+2.	Latency is zero
+
+3.	Bandwidth is infinite
+
+4.	The network is secure
+
+5.	Topology doesn't change
+
+6.	There is one administrator
+
+7.	Transport cost is zero
+
+8.	The network is homogeneous
+
+
+**Distributed Architecture**
+
+- **Service-Oriented Architecture (SOA) ** : where many of the components in an application are services - implementation could be a web application that calls a web service, that calls another web service, ...
+
+- **Microservices** (aka SOA 2 or SOA done properly): complex applications where the services are small, dedicated and autonomous to do
+a single task or features of the business, they neither share implementation code, nor data. Every microservice has its own database or  data store suitable to a particular kind of service. They communicate using language-agnostic APIs, The services are loosely coupled and don't have to use the same language or platform.
+
