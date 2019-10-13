@@ -553,7 +553,7 @@ attached to the message properties. The same correlation ID is put onto the prop
 
 > The client posts a message to the RPC queue that has a correlation ID of 12345. This message is received by the server and a reply is sent back to the client on a reply queue with the same correlation ID of 12345.
 
-# II) Events-sourcing
+# II) Microservices and NService Bus
 
 ## Monolith 
 
@@ -588,7 +588,7 @@ application where everything is contained in a single program using one technolo
 
 - When **application** grows it becomes **complex**, **brittle** and **hard to maintain**.
 
-- Most likely **performance** becomes an issue, because **components** are called **synchronously** after each others.
+- Most likely **performance** becomes an issue, because **components** are called **synchronously** after each other’s.
 
 - Monolith is limited to one **technology stack**.
 
@@ -602,7 +602,7 @@ applications or software that runs on multiple computers within a network at the
 
 - **Loose coupling**:in order to talk to the other services we must hide as much complexity as possible within the service and expose as less as possible through an interface (or **Contract**), e.g. ability to change some logic within one service without disrupting other services, and to have to **redeploy** all other services.
 
->> Domain Driven Design help us to find bounderies through the Bounded contexts.
+>> Domain Driven Design help us to find boundaries through the Bounded contexts.
 
 
 **Coupling** is the way different services depend on each other:
@@ -638,20 +638,45 @@ The **Eight Fallacies of Distributed Computing** by Peter Deutsch:
 *8.	The network is homogeneous*
 
 
-**Distributed Architecture** :
+### Distributed Architecture:
 
 - **Service-Oriented Architecture** (SOA) : where many of the components in an application are services - implementation could be a web application that calls a web service, that calls another web service, ...
 
 - **Microservices** (aka SOA 2 or SOA done properly): complex applications where the services are small, dedicated and autonomous to do
 a single task or features of the business, they neither share implementation code, nor data. Every microservice has its own database or  data store suitable to a particular kind of service. They communicate using language-agnostic APIs, The services are loosely coupled and don't have to use the same language or platform.
 
+**Properties of microservices**: 
 
-**Distributed Architecture** technology :
--  RPC (Remote Procedure Call) : is a way to call a class' method over the wire, different programming platforms each develop their own way RPC (.NET Remoting and Java RMI and later WCF based on more standarised SOAP or Simple Object Access Protocol using WSDL).
+- **Maintainable**: easier to maintain, very loosely coupled and have a high cohesion, team work separately, the overall architecture is more complex, but an individual microservices architecture is probably not complex. 
+
+- **Versioning**:  new version of the service could run side-by-side with an old version, it is also possible to let one microservice has multiple messaging process endpoints, each supporting different versions. 
+
+- **Each their own**: technology best suited for the service, e.g. language, framework, platform, and database suited to the service.
+
+- **Hosting**: flexible. Physical machines or virtual machines in the cloud or docker container that could be scaled out.
+
+- **Failure Isolation**: app as a whole keeps functioning, the message sticks in the queue, and can be picked up as soon as the service is running again. 
+
+- **Observable**: each service on a separate VM or Docker container are highly observable, because CPU and memory can be monitored for each service individually, and will become immediately apparent what service should be fixed or optimized.
+
+- **UI**: each autonomous service should have and expose its own user interface. That way from a UI perspective, when one service fails, all UI elements are still shown, except for the UI from that one service (SPA).
+
+- **Discovery**:  services to discover each other in the form of name IP address resolution, for example, it prevents a tight coupling between the service and its URI (product like Consul or ZooKeeper). 
+
+- **Security**: security mechanism such as OAuth 2 and OpenID Connect. 
+
+- **Deployment**: a team can work on one microservice, and also deploy it separately, Continuous deployment, essentially deployment after each check in is very straight forward to implement.
+
+>> Microservice architecture solves a lot of problems, but it also introduces complexity, security, UI, discoverability, hosting, and messaging infrastructure, and monitoring, all become much more complex than programming a monolithic application.
+
+
+### Distributed Architecture technology:
+
+1. **RPC** (Remote Procedure Call) : is a way to call a class' method over the wire, different programming platforms each develop their own way RPC (.NET Remoting and Java RMI and later WCF based on more standardized SOAP or Simple Object Access Protocol using WSDL).
 	- High degree of **behavioral** (proxy classes) and ** temporal coupling** 
 	- Although ** WSDL** allows **methods discovery**  so many programming frameworks and languages can consume the servers, it tends to be implemented slightly different by the different platforms, so there is still **slight platform coupling**.
 	
-- **[REST](https://martinfowler.com/articles/richardsonMaturityModel.html)** (Representational State Transfer): is using the semantics of the transport protocol, commonly used protocol is HTTP. One of the properties is that the methods in the service are not directly exposed, all resources like data are available as specific URIs, and want to do with it is partly determined by how the call to the URI is made (HTTP verb such as Get, Post, Put, Delete).
+2. **[REST](https://martinfowler.com/articles/richardsonMaturityModel.html)** (Representational State Transfer): is using the semantics of the transport protocol, commonly used protocol is HTTP. One of the properties is that the methods in the service are not directly exposed, all resources like data are available as specific URIs, and want to do with it is partly determined by how the call to the URI is made (HTTP verb such as Get, Post, Put, Delete).
 
 
 ![pic](https://martinfowler.com/articles/images/richardsonMaturityModel/overview.png)
@@ -660,12 +685,16 @@ a single task or features of the business, they neither share implementation cod
 
 >> Hypermedia controls is a way to get the URIs from the service, and a consumer knows where a certain resource is located, e.g. in the REST model, when creating data with a Post call, the response returns the unique URL where the new resource is located.
 
-**Rest and Coupling**
+	**Rest and Coupling**
 
-- Lower platform coupling 
+	- Lower platform coupling 
 
-- Behavioral coupling is still present but can get very low (Uri's or resource location).
+	- Behavioral coupling is still present but can get very low (Uri's or resource location).
 
-- Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
+	- Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
 
+
+3. **Asynchronous Message**: using a service bus (set of classes around the sending and receiving of messages) enables different services can send and receive messages in a loosely-coupled way, every service has an endpoint with which it can receive and send messages. The messaging system should be dumb and contain no business logic, everything smart should be in the service itself. The messaging system only routes the message to the inbox of another service, or multiple services in the case of a published event, If the receiving service is up, it will be notified via the service bus that a new message has arrived, and if processed successfully, it will be deleted from the queue, after which the service can process the next one. Each endpoint is connected to one particular queue, but one service can contain multiple endpoints.
+
+>> Asynchronous Messaging system use eventual consistency which need to be managed efficiently. 
 
