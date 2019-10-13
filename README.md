@@ -685,13 +685,13 @@ a single task or features of the business, they neither share implementation cod
 
 >> Hypermedia controls is a way to get the URIs from the service, and a consumer knows where a certain resource is located, e.g. in the REST model, when creating data with a Post call, the response returns the unique URL where the new resource is located.
 
-	**Rest and Coupling**
+**Rest and Coupling**
 
-	- Lower platform coupling 
+- Lower platform coupling 
 
-	- Behavioral coupling is still present but can get very low (Uri's or resource location).
+- Behavioral coupling is still present but can get very low (Uri's or resource location).
 
-	- Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
+- Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
 
 
 3. **Asynchronous Message**: using a service bus (set of classes around the sending and receiving of messages) enables different services can send and receive messages in a loosely-coupled way, every service has an endpoint with which it can receive and send messages. The messaging system should be dumb and contain no business logic, everything smart should be in the service itself. The messaging system only routes the message to the inbox of another service, or multiple services in the case of a published event, If the receiving service is up, it will be notified via the service bus that a new message has arrived, and if processed successfully, it will be deleted from the queue, after which the service can process the next one. Each endpoint is connected to one particular queue, but one service can contain multiple endpoints.
