@@ -602,7 +602,7 @@ applications or software that runs on multiple computers within a network at the
 
 - **Loose coupling**:in order to talk to the other services we must hide as much complexity as possible within the service and expose as less as possible through an interface (or **Contract**), e.g. ability to change some logic within one service without disrupting other services, and to have to **redeploy** all other services.
 
->> Domain Driven Design help us to find bounderies through the Bounded context.
+>> Domain Driven Design help us to find bounderies through the Bounded contexts.
 
 
 **Coupling** is the way different services depend on each other:
@@ -617,31 +617,54 @@ applications or software that runs on multiple computers within a network at the
 	- how do we roll back the other services
 	- how do we handle retries
 
->> Note that this has nothing to do with synchronous or asynchronous code, like the async and wait syntax in C#, Using that pattern, resources for the web server are made available for other requests while our servers do their work, but the user still has to wait for them all to complete!
+>> Note that this has nothing to do with synchronous or asynchronous code, like the async and wait syntax in C#, using that pattern, resources for the web server for instance are made available for other requests while servers do their work, but the user still has to wait for them all to complete!
 
 
-The **Eight Fallacies of Distributed Computing** by Peter Deutsch
-1.	The network is reliable
+The **Eight Fallacies of Distributed Computing** by Peter Deutsch:
+*1.	The network is reliable*
 
-2.	Latency is zero
+*2.	Latency is zero*
 
-3.	Bandwidth is infinite
+*3.	Bandwidth is infinite*
 
-4.	The network is secure
+*.	The network is secure*
 
-5.	Topology doesn't change
+*5.	Topology doesn't change*
 
-6.	There is one administrator
+*6.	There is one administrator*
 
-7.	Transport cost is zero
+*7.	Transport cost is zero*
 
-8.	The network is homogeneous
+*8.	The network is homogeneous*
 
 
-**Distributed Architecture**
+**Distributed Architecture** :
 
-- **Service-Oriented Architecture (SOA) ** : where many of the components in an application are services - implementation could be a web application that calls a web service, that calls another web service, ...
+- **Service-Oriented Architecture** (SOA) : where many of the components in an application are services - implementation could be a web application that calls a web service, that calls another web service, ...
 
 - **Microservices** (aka SOA 2 or SOA done properly): complex applications where the services are small, dedicated and autonomous to do
 a single task or features of the business, they neither share implementation code, nor data. Every microservice has its own database or  data store suitable to a particular kind of service. They communicate using language-agnostic APIs, The services are loosely coupled and don't have to use the same language or platform.
+
+
+**Distributed Architecture** technology :
+-  RPC (Remote Procedure Call) : is a way to call a class' method over the wire, different programming platforms each develop their own way RPC (.NET Remoting and Java RMI and later WCF based on more standarised SOAP or Simple Object Access Protocol using WSDL).
+	- High degree of **behavioral** (proxy classes) and ** temporal coupling** 
+	- Although ** WSDL** allows **methods discovery**  so many programming frameworks and languages can consume the servers, it tends to be implemented slightly different by the different platforms, so there is still **slight platform coupling**.
+	
+- **[REST](https://martinfowler.com/articles/richardsonMaturityModel.html)** (Representational State Transfer): is using the semantics of the transport protocol, commonly used protocol is HTTP. One of the properties is that the methods in the service are not directly exposed, all resources like data are available as specific URIs, and want to do with it is partly determined by how the call to the URI is made (HTTP verb such as Get, Post, Put, Delete).
+
+[pic](https://martinfowler.com/articles/images/richardsonMaturityModel/overview.png)
+
+>> Swamp of POX, where POX stands for Plain Old XML which refers to RPC with SOAP, where RPC is mostly ignoring the underlying protocol such TCP.
+
+>> Hypermedia controls is a way to get the URIs from the service, and a consumer knows where a certain resource is located, e.g. in the REST model, when creating data with a Post call, the response returns the unique URL where the new resource is located.
+
+**Rest and Coupling**
+
+- Lower platform coupling 
+
+- Behavioral coupling is still present but can get very low (Uri's or resource location).
+
+- Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
+
 
