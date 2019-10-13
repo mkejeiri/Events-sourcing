@@ -600,7 +600,7 @@ applications or software that runs on multiple computers within a network at the
 
 - **High cohesion**: the pieces of functionality that relate to each other should stick together in a service and unrelated pieces should be pushed outside.
 
-- **Loose coupling**:in order to talk to the other services we must hide as much complexity as possible within the service and expose as less as possible through an interface (or **Contract**), e.g. ability to change some logic within one service without disrupting other services, and to have to **redeploy** all other services.
+- **Loose coupling**:in order to talk to the other services we must hide as much complexity as possible within the service and expose as less as possible through an interface (or **Contract**), e.g. ability to change some logic within one service without disrupting other services, avoiding to **redeploy** them as well.
 
 >> Domain Driven Design help us to find boundaries through the Bounded contexts.
 
