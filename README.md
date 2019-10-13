@@ -555,3 +555,41 @@ attached to the message properties. The same correlation ID is put onto the prop
 
 # II) Events-sourcing
 
+## Monolith 
+
+application where everything is contained in a single program using one technology.
+
+**Benefit of a monolith**
+- **Ease of deployment**
+
+- **Most programmed applications** in the world, and tend to be simple in architecture (Junior developers kick in)
+
+- **No external dependencies**
+
+- Easy to **test** as a whole, and setting up multiple environments should be fairly straightforward
+
+- **Project** is easily **shared** among **developers** through a source control.
+
+**Monolithic problems**
+
+- Components are called **synchronously**, i.e. longtime before the user sees some result
+
+- Tight **horizontal coupling** going on between the components in a synchronous way
+
+- It's common to use one **same database** for each of the components which could lead to potential **integration through database**.
+
+- How to manage **roll back** : *user retry*, or should the *system retry*?
+
+- The **risk of overloading the server** is substantial (chaining problem)
+
+- Difficult to have **multiple teams** doing **each component separately** due **tight coupling** between components (a component changes, the whole application has to be retested)
+
+- Over time, **features** are **added** to the **solution** until the **architecture** can't support all the features anymore, then a **rewrite** is required. 
+
+- When **application** grows it becomes **complex**, **brittle** and **hard to maintain**.
+
+- Most likely **performance** becomes an issue, because **components** are called **synchronously** after each others.
+
+- Monolith is limited to one **technology stack**.
+
+
