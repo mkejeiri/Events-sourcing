@@ -19,14 +19,16 @@
             Console.Title = "eCommerce.OrderActivity";
             LogManager.Use<DefaultFactory>().Level(LogLevel.Info);
 
-            var endpointConfiguration = new EndpointConfiguration("eCommerce.OrderActivity");
+            var endpointConfiguration = new EndpointConfiguration(endpointName: "eCommerce.OrderActivity");
             endpointConfiguration.UseTransport<MsmqTransport>();
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
             endpointConfiguration.EnableInstallers();
-            endpointConfiguration.SendFailedMessagesTo("error");
+            endpointConfiguration.SendFailedMessagesTo(errorQueue: "error");
 
             var endpointInstance = await Endpoint.Start(endpointConfiguration)
-                .ConfigureAwait(false);
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
             try
             {
                 Console.WriteLine("eCommerce.OrderActivity. Press any key to exit");
@@ -35,7 +37,9 @@
             finally
             {
                 await endpointInstance.Stop()
-                    .ConfigureAwait(false);
+                    // prevent the passing in of the controls thread context into the new
+                    // thread, which we don't need for sending a message
+                    .ConfigureAwait(continueOnCapturedContext: false);
             }
         }
     }

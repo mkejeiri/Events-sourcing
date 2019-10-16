@@ -33,7 +33,7 @@ namespace eCommerce.Web.Controllers
             //In addition to that, we have to configure a uniqueId in the endpoint configuration for the service. 
             //Request is an extension method in the NServiceBus.Callbacks NuGet package
             var priceResponse = await endpoint.Request<PriceResponse>(
-                new PriceRequest {Weight = order.Weight}
+                new PriceRequest { Weight = order.Weight }
                 //, options //Routing is done in the config file
                 );
             order.Price = priceResponse.Price;
@@ -49,14 +49,17 @@ namespace eCommerce.Web.Controllers
         {
             //await endpoint.Send("eCommerce.Order", new ProcessOrderCommand
             //Routing is done in the config file
-            await endpoint.Send(new ProcessOrderCommand
+            await endpoint.Send(message: new ProcessOrderCommand
             {
                 OrderId = Guid.NewGuid(),
                 AddressFrom = order.AddressFrom,
                 AddressTo = order.AddressTo,
                 Price = order.Price,
                 Weight = order.Weight
-            }).ConfigureAwait(false);
+            })
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             return View();
         }

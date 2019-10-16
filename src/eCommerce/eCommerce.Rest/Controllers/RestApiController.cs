@@ -20,14 +20,17 @@ namespace eCommerce.Rest.Controllers
         //while the message is sent, controllers are able to process other requests
         public async Task Post(Order order)
         {
-            await endpoint.Send("eCommerce.Order",new ProcessOrderCommand
+            await endpoint.Send(destination: "eCommerce.Order", message: new ProcessOrderCommand
             {
                 OrderId = Guid.NewGuid(),
                 AddressFrom = order.AddressFrom,
                 AddressTo = order.AddressTo,
                 Price = order.Price,
                 Weight = order.Weight
-            }).ConfigureAwait(false);
+            })
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
         }
 
     }

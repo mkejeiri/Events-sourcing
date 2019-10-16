@@ -61,7 +61,7 @@ namespace eCommerce.Saga
         public async Task Handle(ProcessOrderCommand message, IMessageHandlerContext context)
         {
             Console.WriteLine($"ProcessOrder command received. Starting saga for orderId  {message.OrderId}");
-            logger.Info($"ProcessOrder command received. Starting saga for orderId  {message.OrderId}");
+            logger.Info(message: $"ProcessOrder command received. Starting saga for orderId  {message.OrderId}");
 
             //Copy all the data into the Saga
             Data.OrderId = message.OrderId;
@@ -73,8 +73,10 @@ namespace eCommerce.Saga
             //the saga the PlanOrderCommand routed in the app.config file to the input queue of the planner service (eCommerce.Planner)
             //the saga only fill the message with the data eCommerce.Planner needs. The planning service is a
             //commandline application hosting an endpoint, and the saga delegates the planning work (the heavy lifting) to its handler.
-            await context.Send(new PlanOrderCommand { OrderId = Data.OrderId, AddressTo = Data.AddressTo })
-                .ConfigureAwait(false);
+            await context.Send(message: new PlanOrderCommand { OrderId = Data.OrderId, AddressTo = Data.AddressTo })
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
         }
 
 
@@ -87,7 +89,7 @@ namespace eCommerce.Saga
         {
             //We send the DispatchOrderCommand. This time it's routed in the app.config, i.e. to eCommerce.Order service.
             //The message only contains what Dispatch needs to know.
-            logger.Info($"Order {Data.OrderId} has been planned. Sending dispatch command.");
+            logger.Info(message: $"Order {Data.OrderId} has been planned. Sending dispatch command.");
             await context.Send(new DispatchOrderCommand { AddressTo = Data.AddressTo, Weight = Data.Weight });
         }
 
@@ -95,17 +97,20 @@ namespace eCommerce.Saga
         //Step 4 : the saga send OrderProcessedMessage as a reply to Originator (RestApi or WebUI)  and we mark itself as completed
         public async Task Handle(IOrderDispatchedMessage message, IMessageHandlerContext context)
         {
-           logger.Info($"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
+            logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
 
             //When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
             //KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
-            await ReplyToOriginator(context, new OrderProcessedMessage()
+            await ReplyToOriginator(context: context, message: new OrderProcessedMessage()
             {
                 AddressTo = Data.AddressTo,
                 AddressFrom = Data.AddressFrom,
                 Price = Data.Price,
                 Weight = Data.Weight
-            }).ConfigureAwait(false);
+            })
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             //tell the saga it's done with the MarkAscomplete method
             //The saga will throw away the data object in the configured storage

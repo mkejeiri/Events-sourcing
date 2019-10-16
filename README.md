@@ -712,7 +712,8 @@ a single task or features of the business, they neither share implementation cod
 
 >> Asynchronous Messaging system uses eventual consistency which need to be managed efficiently. 
 
-**Few words in [NServiceBus](https://particular.net/nservicebus)**
+
+### Few words in [NServiceBus](https://particular.net/nservicebus)
 
 It's a .NET Framework that enables us to implement communication between apps using messaging in microservice style architecture. It's part of a suite called the Particular Service Platform. The framework lies on top of messaging backends or transports, i.e. an abstraction of the messaging backends. NServiceBus started out as a framework supporting only MSMQ, but nowadays is also supporting transports like RabbitMQ and Azure and even SQL Server, the transport is a simple config detail.
 
