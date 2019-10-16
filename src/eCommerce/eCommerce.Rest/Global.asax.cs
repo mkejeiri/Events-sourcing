@@ -30,18 +30,19 @@ namespace eCommerce.Rest
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            builder.RegisterApiControllers(controllerAssemblies: Assembly.GetExecutingAssembly());
             var container = builder.Build();
 
             GlobalConfiguration.Configuration.DependencyResolver = new AutofacWebApiDependencyResolver(container);
 
-            var endpointConfiguration = new EndpointConfiguration("eCommerce.Rest");
+            var endpointConfiguration = new EndpointConfiguration(endpointName: "eCommerce.Rest");
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
             endpointConfiguration.UseTransport<MsmqTransport>();
-            endpointConfiguration.PurgeOnStartup(true);
+            endpointConfiguration.PurgeOnStartup(value: true);
             endpointConfiguration.EnableInstallers();
             endpointConfiguration.UseContainer<AutofacBuilder>(
-                customizations => {
+                customizations: customizations =>
+                {
                     customizations.ExistingLifetimeScope(container);
                 });
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
@@ -51,7 +52,7 @@ namespace eCommerce.Rest
 
             var updater = new ContainerBuilder();
             updater.RegisterInstance(endpoint);
-            updater.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            updater.RegisterApiControllers(controllerAssemblies: Assembly.GetExecutingAssembly());
             var updated = updater.Build();
 
             //We can inject the endpoint instance into the controller to do operations with messages.

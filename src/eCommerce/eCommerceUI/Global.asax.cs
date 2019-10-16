@@ -26,14 +26,14 @@ namespace eCommerce.Web
         }
 
         /*
-      Although NServiceBus uses its own DI container internally, or any other DI to set up injection into the web API controls, 
+      Although NServiceBus uses its own DI container internally, or any other DI to set up injection into the MVC controls, 
       because that's not supported by NServiceBus container. The ContainerBuilder class for Autofac is called ContainerBuilder. 
-      We registered the controllers with the container => thus the endpoint is registered. We build the container to tell Web API
+      We registered the controllers with the container => thus the endpoint is registered. We build the container to tell MVC
       to use it by setting the DependencyResolver on its Configuration object. But from now on, We can inject the endpoint
       instance into the controller to do operations with messages.
 
-      install-package Microsoft.AspNet.WebApi.OData -ProjectName 
-      update-package Microsoft.AspNet.WebApi -ProjectName eCommerce.Rest
+      install-package Microsoft.AspNet.WebApi.OData -ProjectName  eCommerceUI
+      update-package Microsoft.AspNet.WebApi -ProjectName eCommerceUI
       */
         private void ConfigureEndpoint()
         {
@@ -44,16 +44,17 @@ namespace eCommerce.Web
 
             DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
 
-            var endpointConfiguration = new EndpointConfiguration("eCommerceUI");
+            var endpointConfiguration = new EndpointConfiguration(endpointName: "eCommerceUI");
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
             endpointConfiguration.UseTransport<MsmqTransport>();
-            endpointConfiguration.PurgeOnStartup(true);
+            endpointConfiguration.PurgeOnStartup(value: true);
             endpointConfiguration.EnableInstallers();
-            endpointConfiguration.MakeInstanceUniquelyAddressable("uniqueId");
+            endpointConfiguration.MakeInstanceUniquelyAddressable(discriminator: "uniqueId");
             endpointConfiguration.UseContainer<AutofacBuilder>(
-                customizations => {
-                    customizations.ExistingLifetimeScope(container);
-                });
+                customizations: customizations =>
+                 {
+                     customizations.ExistingLifetimeScope(container);
+                 });
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
             endpointConfiguration.EnableInstallers();
 
