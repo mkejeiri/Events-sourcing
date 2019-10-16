@@ -642,8 +642,11 @@ The **Eight Fallacies of Distributed Computing** by Peter Deutsch:
 
 - **Service-Oriented Architecture** (SOA) : where many of the components in an application are services - implementation could be a web application that calls a web service, that calls another web service, ...
 
-- **Microservices** (aka SOA 2 or SOA done properly): complex applications where the services are small, dedicated and autonomous to do
+- **Microservices** (aka SOA 2.0 or SOA done properly): complex applications where the services are small, dedicated and autonomous to do
 a single task or features of the business, they neither share implementation code, nor data. Every microservice has its own database or  data store suitable to a particular kind of service. They communicate using language-agnostic APIs, The services are loosely coupled and don't have to use the same language or platform.
+
+
+![pic](https://martinfowler.com/bliki/images/microservice-verdict/productivity.png)
 
 **Properties of microservices**: 
 
