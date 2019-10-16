@@ -676,7 +676,7 @@ a single task or features of the business, they neither share implementation cod
 ### Distributed Architecture technology:
 
 1. **RPC** (Remote Procedure Call) : is a way to call a class' method over the wire, different programming platforms each develop their own way RPC (.NET Remoting and Java RMI and later WCF based on more standardized SOAP or Simple Object Access Protocol using WSDL).
-	- High degree of **behavioral** (proxy classes) and ** temporal coupling** 
+	- High degree of **behavioral** (proxy classes) and **temporal coupling** 
 	- Although ** WSDL** allows **methods discovery**  so many programming frameworks and languages can consume the servers, it tends to be implemented slightly different by the different platforms, so there is still **slight platform coupling**.
 	
 2. **[REST](https://martinfowler.com/articles/richardsonMaturityModel.html)** (Representational State Transfer): is using the semantics of the transport protocol, commonly used protocol is HTTP. One of the properties is that the methods in the service are not directly exposed, all resources like data are available as specific URIs, and want to do with it is partly determined by how the call to the URI is made (HTTP verb such as Get, Post, Put, Delete).
@@ -697,7 +697,36 @@ a single task or features of the business, they neither share implementation cod
 - Temporal coupling because REST services still have to be up to do their jobs, and consumers still have to wait for the response.
 
 
-3. **Asynchronous Message**: using a service bus (set of classes around the sending and receiving of messages) enables different services to send and receive messages in a loosely-coupled way, every service has an endpoint with which can receive and send messages. The messaging system should be dumb and contain no business logic (Vs ESB such as MS BizTalk), every domain logic should be in the service itself. The messaging system only routes the message to the inbox of another service, or multiple services in the case of a published event, If the receiving service is up, it will be notified via the service bus that a new message has arrived, and if processed successfully, it will be deleted from the queue, after which the service can process the next one. Each endpoint is connected to one particular queue, but one service can contain multiple endpoints.
+3. **Asynchronous Messaging**: using a service bus (set of classes around the sending and receiving of messages) enables different services to send and receive messages in a loosely-coupled way, every service has an endpoint with which can receive and send messages. The messaging system should be **dumb pipes** and contain no business logic (Vs **ESB** such as MS BizTalk), every domain logic should be in the service itself. The messaging system only routes the message to the inbox of another service, or multiple services in the case of a published event, If the receiving service is up, it will be notified via the service bus that a new message has arrived, and if processed successfully, it will be deleted from the queue, after which the service can process the next one. Each endpoint is connected to one particular queue, but one service can contain multiple endpoints.
+
+**Microservice and Coupling**
+
+- *Loose platform coupling*: with the exception the inability for some platform to connect to the message queue.
+
+- *Loose Behavioral coupling*: Only message with some data *VS* RPC and REST where the behavior is dictated by the caller which should have some knowledge about the request that handled by the receiver. Whereas in Microservices, how the request is handled is entirely determined by the service that has to process it.
+
+- *Loose Temporal coupling*: When sending a command or receiving an event, the service doesn't have to be up, because the message is safe in a queue until the service becomes available.
+
+
+>> Fallacies of distributed computing still apply: network dependency, latency or security, ...
 
 >> Asynchronous Messaging system uses eventual consistency which need to be managed efficiently. 
+
+**Few words in [NServiceBus](https://particular.net/nservicebus)**
+
+It's a .NET Framework that enables us to implement communication between apps using messaging in microservice style architecture. It's part of a suite called the Particular Service Platform. The framework lies on top of messaging backends or transports, i.e. an abstraction of the messaging backends. NServiceBus started out as a framework supporting only MSMQ, but nowadays is also supporting transports like RabbitMQ and Azure and even SQL Server, the transport is a simple config detail.
+
+NServiceBus is very pluggable and extensible, It comes in different NuGet packages supporting dependency injection frameworks and databases... 
+
+The core of NServiceBus consists of: 
+
+- **NServiceBus** - Required: contains the complete framework (NuGet packages) that support transports such as MSMQ, RabbitMQ, Azure, SQL Server which come in separate NuGet packages each.
+
+- **NServiceBus.Host** - Optional : self-host different app styles such as ASP. NET MVC and WPF. Self-hosting is optional, but we can create a DLL containing this service, and let NServiceBus do the Hosting. This package contains an executable that behaves as a command line application for debugging, and it can be easily installed as a Windows service. 
+
+- **NServiceBus.Testing**: help with unit testing specially with **sagas**.
+
+
+
+
 
