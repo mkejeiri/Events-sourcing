@@ -838,7 +838,7 @@ routing.RouteToEndpoint(
 
 ```
 
-**Events example**
+**Subscriber Event example**
 
 ```sh
 var transport = endpointConfiguration.UseTransport<MyTransport>();
