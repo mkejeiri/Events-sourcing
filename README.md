@@ -723,11 +723,193 @@ The core of NServiceBus consists of:
 
 - **NServiceBus** - Required: contains the complete framework (NuGet packages) that support transports such as MSMQ, RabbitMQ, Azure, SQL Server which come in separate NuGet packages each.
 
-- **NServiceBus.Host** - Optional : self-host different app styles such as ASP. NET MVC and WPF. Self-hosting is optional, but we can create a DLL containing this service, and let NServiceBus do the Hosting. This package contains an executable that behaves as a command line application for debugging, and it can be easily installed as a Windows service. 
+- **NServiceBus.Host** (Deprecated) - Optional : self-host different app styles such as ASP. NET MVC and WPF. Self-hosting is optional, but we can create a DLL containing this service, and let NServiceBus do the Hosting. This package contains an executable that behaves as a command line application for debugging, and it can be easily installed as a Windows service. 
 
 - **NServiceBus.Testing**: help with unit testing specially with **sagas**.
 
 
 
+#### Messages: Commands and Events
+
+- **Commands** :  are messages or C# class containing data in the form of properties, they can have multiple senders, but always have one receiver, either they should be derived from ICommand interface,or implemeted using an Unobtrusive mode. 
+As a convention, commands Names in the imperative e.g. *ProcessOrder* or *CreateNewUser*
+
+```sh
+ await endpoint.Send(message: new ProcessOrderCommand
+            {
+                OrderId = Guid.NewGuid(),
+                AddressFrom = order.AddressFrom,
+                AddressTo = order.AddressTo,
+                Price = order.Price,
+                Weight = order.Weight
+            }).ConfigureAwait(continueOnCapturedContext: false);
+```
 
 
+- **Events** : are implemented as C# interfaces. They are different because they always have one sender and multiple receivers (i.e. commands opposite). Events implement the publish/subscribe pattern, so receivers interested in a specific event must register themselves with the sender. NServiceBus stores the subscriptions in the configured storage and we must mark all event classes with the IEvent marker interface. Events are in the past tense like OrderProcessedEvent or NewUserCreatedEvent. 
+
+> Under the cover, NServiceBus will create the implementing class, we provide the content of the message by specifying the Lambda. 
+
+```sh
+...
+public async Task Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+        {
+           ...
+            await context.Publish<IOrderProcessedEvent>(messageConstructor: e =>
+             {
+                 e.AddressFrom = message.AddressFrom;
+                 e.AddressTo = message.AddressTo;
+                 e.Price = message.Price;
+                 e.Weight = message.Weight;
+             });            
+        }
+
+```
+
+> NServiceBus uses a built-in IoC container, which is a lean version of **Autofac** contained in the core, IoC inject NServiceBus-related types into objects managed by NServiceBus, such as a class implementing IHandleMessages, ICommand, IEvent,... etc, 
+
+>At Endpoint startup NServiceBus does the Assembly Scanning to find all types that need such as ICommand, IEvent (or Unobtrusive mode) and IHandleMessages, and registering all the types it needs. 
+
+> If we want to inject IBus instances into MVC controllers, etc., we can plug in virtually any existing container...
+
+> If we don't want to scan all assemblies, the scanning can be limited in the config file to scan only certain assemblies.
+
+
+#### Routing Messages
+
+- To send command to the same endpoints we use a routing option config instead of specific endpoint name as a string in the send method.
+
+- For events we have to specify where the endpoint should register the subscription. 
+
+There are 2 choices for routing : 
+- config file: xml file config
+
+```sh
+<configuration>
+  <configSections>
+    <section name="MessageForwardingInCaseOfFaultConfig" type="NServiceBus.Config.MessageForwardingInCaseOfFaultConfig, NServiceBus.Core"/>
+    <section name="UnicastBusConfig" type="NServiceBus.Config.UnicastBusConfig, NServiceBus.Core"/>
+    <section name="AuditConfig" type="NServiceBus.Config.AuditConfig, NServiceBus.Core"/>
+  </configSections> 
+  <MessageForwardingInCaseOfFaultConfig ErrorQueue="error"/>
+  <UnicastBusConfig>
+    <MessageEndpointMappings>
+	 <!-- Option 1 -->
+     <!--<add Assembly="eCommerce.Messages" Endpoint="eCommerce.Order"/>
+	 <!--Option 2-->
+     <!--<add Assembly="eCommerce.Messages" Namespace="eCommerce.Messages" Endpoint="eCommerce.Order"/>-->
+	 <!--Option 3-->	 
+     <add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand" Endpoint="eCommerce.Order"/>
+    </MessageEndpointMappings>
+  </UnicastBusConfig>
+  <AuditConfig QueueName="audit"/>
+  <startup>
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.6.1" />
+  </startup>
+</configuration>
+```
+
+- routing API : NServiceBus is moving more to that option
+
+**Commands example**
+
+```sh
+var transport = endpointConfiguration.UseTransport<MyTransport>();
+var routing = transport.Routing();
+
+//Option 1 : route all messages in the assembly were the ProcessOrderCommand 'classes' in are routed to the "eCommerce.Order" endpoint
+//XML :  <add Assembly="eCommerce.Messages" Endpoint="eCommerce.Order"/>
+routing.RouteToEndpoint(
+    assembly: typeof(eCommerce.Messages.ProcessOrderCommand).Assembly,
+    destination: "eCommerce.Order");
+
+//Option 2:  limit that to a certain namespace in that assembly, e.g. "eCommerce.Messages"
+//XML : <add Assembly="eCommerce.Messages" Namespace="eCommerce.Messages" Endpoint="eCommerce.Order"/> 
+routing.RouteToEndpoint(
+    assembly: typeof(ProcessOrderCommand).Assembly,
+    @namespace: "eCommerce.Messages",
+    destination: "eCommerce.Order");
+
+//Option 3: limit routing for one messageType "ProcessOrderCommand"
+//XML : <add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand" Endpoint="eCommerce.Order"/>
+routing.RouteToEndpoint(
+    messageType: typeof(eCommerce.Messages.ProcessOrderCommand),
+    destination: "eCommerce.Order");
+
+```
+
+**Events example**
+
+```sh
+var transport = endpointConfiguration.UseTransport<MyTransport>();
+
+var routing = transport.Routing();
+
+//Option 1
+routing.RegisterPublisher(
+    assembly: typeof(eCommerce.Messages.IOrderProcessedEvent).Assembly,
+    publisherEndpoint: "eCommerce.Order");
+
+//Option 2
+routing.RegisterPublisher(
+    assembly: typeof(eCommerce.Messages.IOrderProcessedEvent).Assembly,
+    @namespace: "eCommerce.Messages",
+    publisherEndpoint: "eCommerce.Order");
+
+//Option 3
+routing.RegisterPublisher(
+    eventType: typeof(eCommerce.Messages.IOrderProcessedEvent),
+    publisherEndpoint: "eCommerce.Order");
+
+```
+
+a **routing** for a **command** is obvious, i.e. we route the message to the **endpoint point** which should **receive** the **message**. 
+For **events**, the routing must point to the **publisher** of the **event**, i.e. where the **subscription** should be **registered**. 
+
+>> Note events are only interfaces that are shared between publisher and subscriber, they are not concrete classes.
+
+
+#### Configuring NServiceBus
+
+- The **configuration** of NServiceBus relies on **defaults**. 
+- The **configuration** can be a **combination** of *code* and the *config file*
+- **IConfigureThisEndpoint**: Classes implementing this interface are picked up when NServiceBus scans the assemblies, and they are called first when NServiceBus starts up.
+
+
+```sh
+public class EndpointConfig : IConfigureThisEndpoint
+{
+    public void Customize(EndpointConfiguration configuration)
+    {
+        // use 'configuration' object to configure scanning
+		configuration.UsePersistence<InMemoryPersitance>();
+		configuration.SendOnly();
+    }
+}
+```
+
+>> when endpoint is not specified, its name is taken from the namespace the configuration class resides in.
+
+- **INeedInitialization** interface: assembly with one or more classes implementing this interface could define company defaults and conventions, and then reference the assembly from all projects that use NServiceBus. In that way, **IConfigureThisEndpoint** can be used to just override these if necessary. 
+
+- **SendOnly** Endpoint: only send messages and not receive them. NServiceBus will not **waste processing and resources** on the **receiving** of **messages** if we create the bus as SendOnly.
+
+
+### Message Serialization
+
+NServiceBus has to serialize the message classes. The serialized classes form the body of the message in the underlying transport(XML/JSON).
+
+```sh
+configuration.UseSerialization<JsonSerializer>
+```
+
+>> Other serialization types supported out of the box are BSON and Binary, or you can write our own if needed.
+
+
+### Logging
+
+NServiceBus features a built-in logging mechanism, we can also install logging framework by downloading a supporting NuGet package for it. The default logging contains 5 logging levels.
+
+NServiceBus-hosted mode, all logging messages are outputted to the console, they're also written to the trace object, which we configure the output using standard. NET techniques. 
+
+The rolling file is also supported, and has a default maximum of 10 MB per file, and 10 physical log files.The default log level threshold for messages going to trace and the file is info, but it can be adjusted in the config file.
