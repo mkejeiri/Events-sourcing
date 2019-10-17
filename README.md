@@ -719,6 +719,8 @@ It's a .NET Framework that enables us to implement communication between apps us
 
 NServiceBus is very pluggable and extensible, It comes in different NuGet packages supporting dependency injection frameworks and databases... 
 
+>> The example here are based on *"eCommerce"*  [project](src/eCommerce)
+
 The core of NServiceBus consists of: 
 
 - **NServiceBus** - Required: contains the complete framework (NuGet packages) that support transports such as MSMQ, RabbitMQ, Azure, SQL Server which come in separate NuGet packages each.
