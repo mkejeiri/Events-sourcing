@@ -840,6 +840,8 @@ routing.RouteToEndpoint(
 
 **Subscriber Event example**
 
+Here the publisher endpoint is *"eCommerce.Order"*
+
 ```sh
 var transport = endpointConfiguration.UseTransport<MyTransport>();
 
