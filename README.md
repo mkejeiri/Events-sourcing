@@ -1039,3 +1039,18 @@ First NServiceBus re-invokes the handler the configured number of times (i.e. im
 > The error queue holds messages that can't be processed, and keeps them out of the way of the normal message flow in the queues. 
 
 > Moving the message back into the active queue can be done manually or by another process, other members of the Particular Software Suite such as ServersInsight and ServicePulse might be of some help.
+
+
+### The Request/Response Pattern
+
+This pattern sends a message with the send method, but waits for a response message to come back, this is against the nature of **NServiceBus** which handled **natively** everything **asynchronously**. It reintroduces **temporal coupling** which is an **anti-pattern**. 
+
+> a better alternatives is using sagas with SignalR for instance.
+
+Example
+
+[PriceRequestHandler.cs](src/eCommerce/eCommerce.Order/PriceRequestHandler.cs)
+
+[HomeController.cs](src/eCommerce/eCommerceUI/Controllers/HomeController.cs)
+
+>> note that IMessage derived from ICommand and IEvent.
