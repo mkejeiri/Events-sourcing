@@ -620,7 +620,8 @@ applications or software that runs on multiple computers within a network at the
 >> Note that this has nothing to do with synchronous or asynchronous code, like the async and wait syntax in C#, using that pattern, resources for the web server for instance are made available for other requests while servers do their work, but the user still has to wait for them all to complete!
 
 
-The **Eight Fallacies of Distributed Computing** by Peter Deutsch:
+The **Eight Fallacies of Distributed Computing** by [Peter Deutsch](http://www.codersatwork.com/l-peter-deutsch.html):
+
 *1.	The network is reliable*
 
 *2.	Latency is zero*
@@ -1090,3 +1091,5 @@ executed. The saga itself **maintains state** in the form of an **object** we de
 ![pic](src/eCommerce/images/figure5.jpg)
 
 As long as the **saga** runs, it persists its state in a durable storage. The way sagas implementation in NServiceBus is a very open design.
+
+#### Defining Sagas
