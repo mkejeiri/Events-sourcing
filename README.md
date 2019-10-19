@@ -1002,3 +1002,40 @@ await Endpoint.Start(endpointConfiguration)
 
 ### Retries and Fault Tolerance
 
+The fallacies of distributed computing suggests that software and infrastructure will fail, and we want to protect ourselves against that. NServiceBus alleviate help protect us against data loss and boost the system resiliency.
+
+![pic](src/eCommerce/images/figure1.jpg)
+
+
+Happy Path flow :
+
+1. Peeking is looking at a message without actually dequeing it.
+2. If there is a message, a transaction is started, and the message is actually dequeued. NServiceBus makes sure only one thread receives the message.
+3. The message is deserialized
+4. The handlers (witten by us) are invoked and also everything that is rounded in the form of NServiceBus infrastructure code.
+5. successful result: the transaction is committed. 
+
+
+Issue with de-serialization:
+
+![pic](src/eCommerce/images/figure2.jpg)
+
+3. the message is in a format that can't be deserialized : no chance that this kind of error will ever go away by itself, the message is immediately sent to the error queue 
+
+
+Issue with Handlers:
+
+![pic](src/eCommerce/images/figure3.jpg)
+
+4. In case of handlers transient error, i.e. which could go away by itself, e.g. called service is temporarily down, or not reachable, or a deadlock occurs in the database. NServiceBus' retry sub-process starts
+
+![pic](src/eCommerce/images/figure4.jpg)
+
+First NServiceBus re-invokes the handler the configured number of times (i.e. immediate retries), e.g. 5 times is the default  (i.e. everything is configurable) which might be quick for some errors. If immediate retries don't resolve the problem, delayed retries kick in. The message is moved to a special retry queue, and NServiceBus schedules the re-processing of the message in 10 seconds with five retries in a row. If the problem not solved, NServiceBus will wait 20 seconds, and again do the immediate retries 5 times, and then after 30 seconds. When all of this fails, the message is sent to the error queue. 
+
+
+> if the error is indeed transient, then it won't show up in the error queue, we have to check the NServiceBus logs to see it, it will take at least a minute by default before the message actually fails present in the error queue.
+
+> The error queue holds messages that can't be processed, and keeps these out of the way of the normal message flow in the queues. 
+
+> replace the message back into the active queue can be done manually or by another process, other members of the Particular Software Suite such as ServersInsight and ServicePulse might be of some help.
