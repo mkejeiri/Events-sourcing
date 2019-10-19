@@ -917,3 +917,88 @@ NServiceBus features a built-in logging mechanism, we can also install logging f
 NServiceBus-hosted mode, all logging messages are outputted to the console, they're also written to the trace object, which we configure the output using standard. NET techniques. 
 
 The rolling file is also supported, and has a default maximum of 10 MB per file, and 10 physical log files.The default log level threshold for messages going to trace and the file is info, but it can be adjusted in the config file.
+
+### Persistence Options
+
+The **features of the transport** define what NServiceBus should store: 
+
+- *Write you own* : Not a good idea
+
+- **MSMQ** :  doesn't support subscriptions, so the handling of that must be done separately. 
+
+- **State of sagas** has to be stored
+
+- **No default** persistence: need to be defined otherwise NServiceBus will throw an exception at startup. 
+
+- use **InMemoryPersistence** (out of the box) as core assembly built-in by Particular, this more suitable for testing and demo purposes. 
+
+
+- **NHibernate** Persistence (SQL service, Oracle): some persistent classes might require an additional NuGet package and additional config is needed such as connection string in the connection. 
+
+- when **installers** are **enabled**, **NServiceBus** will automatically **create the schemas necessary** when they are not present (has permission to do so).
+
+- **RavenDbPersistence** , **Azure Storage** & **Azure Service fabric** Persistence
+
+- Multiple **persistence mechanisms** :  NServiceBus could use separate storages for subscriptions, sagas, and saga timeouts in the Outbox feature
+
+```sh
+endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Outbox>();
+endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Sagas>();
+endpointConfiguration.UsePersistence<InMemoryPersistence, StorageType.GatewayDeduplication>();
+endpointConfiguration.UsePersistence<InMemoryPersistence, StorageType.Timeouts>();
+
+// This one will override the above settings
+endpointConfiguration.UsePersistence<RavenDBPersistence>();
+```
+
+###  Transports
+
+- **MSMQ** (Windows server native - limited to Windows): works in a decentralized way, i.e. nothing between the service; every server has its own queues stored locally. When a message is sent, it is placed in an outgoing queue local for the server, then the MSMQ system is  delivering the message to the incoming queue of another server (**store and forward**), once a message is sent, it will arrive at the destination and when the sender of the message goes down right after sending the message, or the receiver is down, the message will stick the queue until it can be delivered. Events with publish subscribe are not supported in MSMQ, NServiceBus has its own mechanism which use its persistent setting, i.e. every time the message is sent, the persistent storage is checked if there are any subscribers. 
+
+- **RabbitMQ** : cross-platform broker, supports **AMQP** (standard protocol for messaging).It is centralized (need to be **clustered in a production** due to **single point of failure for the app**), i.e. one server or cluster running RabbitMQ on which the messages and queues reside. When a message arrives at RabbitMQ, it is processed by **an exchange**, which will route the message to one or more queues. **RabbitMQ** has a much *better built-in config routing* (NServiceBus uses this routing mechanism).
+
+- **SQL Server**:  Messages are placed in a table when sent, and the receiving side is polling the table to look for
+new messages. When it processes one successfully, it just deletes the message from the table. The table can be on
+the separate SQL instance or the same one the application uses. NServiceBus uses a back off strategy to do the
+poling. When no messages are in the queue, it will wait longer and longer before trying again, up to a maximum of
+a configurable amount of time. The default maximum is 1 second. 
+
+- **Microsoft Azure**:  NServiceBus can support it and use its internal routing :
+	- **Azure Storage Queues**: simple storage mechanism (low cost) that supports the queuing and dequeuing of messages. . 
+	- **Azure Service Bus** : more advanced and costly but enables bigger messages and lower latency among more options on the message level. 
+	
+**NServiceBus** is an **abstraction** of the **underlying transport**, e.g. as long as the project is small, we start with SQL Server as Transport, and when more messages are flowing through the system, we can switch (which's a mere config detail) to more **robust** transport as **RabbitMQ**. 
+
+> Each transports architecture tends to be different, we need to choose the more suible to the business operation.
+
+### [Installers](https://docs.particular.net/nservicebus/operations/installers)
+
+They are built into NServiceBus, e.g. create the queues in MSMQ upon startup, or create the schema when using a relational database as a persistence mechanism.
+
+```sh
+public class MyInstaller : INeedToInstallSomething
+{
+    public Task Install(string identity)
+    {
+        // Code to install something
+
+        return Task.CompletedTask;
+    }
+}
+```
+
+Installs behave depends on how we're using this service:
+
+- Debugging: installers will run by default every time we start a debugging session, unless we override this in the config.
+- Custom installers classes should check if what we about to instal is already there. 
+- self hosting outside the debugger, the running of installers depends on the config.EnableInstaller setting. 
+
+```sh
+endpointConfiguration.EnableInstallers();
+
+// this will run the installers
+await Endpoint.Start(endpointConfiguration)
+    .ConfigureAwait(false);
+```
+
+### Retries and Fault Tolerance
