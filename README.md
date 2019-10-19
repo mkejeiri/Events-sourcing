@@ -1083,9 +1083,10 @@ var priceResponse = await endpoint.Request<PriceResponse>(
 
 ### Sagas
 
-The NServiceBus context, a saga's purpose is to coordinate the message flow in a way the business requires it.
+The [NServiceBus](https://docs.particular.net/tutorials/nservicebus-sagas/1-getting-started/) context, a saga's purpose is to coordinate the message flow in a way the business requires it.
 Sagas are long-running business processes modeled in code. They support a certain workflow with steps to be
 executed. The saga itself maintains state in the form of an object we define until the saga finishes. 
 
 As long as the saga runs, it persists its state in a durable storage. The way sagas implementation in NServiceBus is a very open design.
 
+![pic](src/eCommerce/images/figure5.jpg)
