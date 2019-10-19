@@ -1007,7 +1007,7 @@ The fallacies of distributed computing suggests that software and infrastructure
 ![pic](src/eCommerce/images/figure1.jpg)
 
 
-Happy Path flow :
+**Happy Path flow**
 
 1. Peeking is looking at a message without actually dequeing it.
 2. If there is a message, a transaction is started, and the message is actually dequeued. NServiceBus makes sure only one thread receives the message.
@@ -1016,14 +1016,14 @@ Happy Path flow :
 5. successful result: the transaction is committed. 
 
 
-Issue with de-serialization:
+**Issue with de-serialization**
 
 ![pic](src/eCommerce/images/figure2.jpg)
 
 3. the message is in a format that can't be deserialized : no chance that this kind of error will ever go away by itself, the message is immediately sent to the error queue 
 
 
-Issue with Handlers:
+**Issue with Handlers**
 
 ![pic](src/eCommerce/images/figure3.jpg)
 
