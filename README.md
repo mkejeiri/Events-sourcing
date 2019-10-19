@@ -909,14 +909,13 @@ configuration.UseSerialization<JsonSerializer>
 
 >> Other serialization types supported out of the box are BSON and Binary, or you can write our own if needed.
 
-
 ### Logging
 
 NServiceBus features a built-in logging mechanism, we can also install logging framework by downloading a supporting NuGet package for it. The default logging contains 5 logging levels.
 
 NServiceBus-hosted mode, all logging messages are outputted to the console, they're also written to the trace object, which we configure the output using standard. NET techniques. 
 
-The rolling file is also supported, and has a default maximum of 10 MB per file, and 10 physical log files.The default log level threshold for messages going to trace and the file is info, but it can be adjusted in the config file.
+The rolling file is also supported, and has a default maximum of 10 MB per file, and 10 physical log files. The default log level threshold for messages going to trace and the file is info, but it can be adjusted in the config file.
 
 ### Persistence Options
 
@@ -930,7 +929,7 @@ The **features of the transport** define what NServiceBus should store:
 
 - **No default** persistence: need to be defined otherwise NServiceBus will throw an exception at startup. 
 
-- use **InMemoryPersistence** (out of the box) as core assembly built-in by Particular, this more suitable for testing and demo purposes. 
+- use **InMemoryPersistence** (out of the box) as core assembly built-in by Particular Software, this more suitable for testing and demo purposes. 
 
 
 - **NHibernate** Persistence (SQL service, Oracle): some persistent classes might require an additional NuGet package and additional config is needed such as connection string in the connection. 
@@ -969,7 +968,7 @@ a configurable amount of time. The default maximum is 1 second.
 	
 **NServiceBus** is an **abstraction** of the **underlying transport**, e.g. as long as the project is small, we start with SQL Server as Transport, and when more messages are flowing through the system, we can switch (which's a mere config detail) to more **robust** transport as **RabbitMQ**. 
 
-> Each transports architecture tends to be different, we need to choose the more suible to the business operation.
+> Each transports architecture tends to be different, we need to choose the more suitable to the business operation.
 
 ### [Installers](https://docs.particular.net/nservicebus/operations/installers)
 
@@ -990,8 +989,8 @@ public class MyInstaller : INeedToInstallSomething
 Installs behave depends on how we're using this service:
 
 - Debugging: installers will run by default every time we start a debugging session, unless we override this in the config.
-- Custom installers classes should check if what we about to instal is already there. 
-- self hosting outside the debugger, the running of installers depends on the config.EnableInstaller setting. 
+- Custom installers classes should check if what we about to install is already there. 
+- self hosting outside the debugger, the running of installers depends on the endpointConfiguration.EnableInstallers setting. 
 
 ```sh
 endpointConfiguration.EnableInstallers();
@@ -1002,3 +1001,4 @@ await Endpoint.Start(endpointConfiguration)
 ```
 
 ### Retries and Fault Tolerance
+
