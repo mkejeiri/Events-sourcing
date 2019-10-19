@@ -1002,7 +1002,7 @@ await Endpoint.Start(endpointConfiguration)
 
 ### Retries and Fault Tolerance
 
-The fallacies of distributed computing suggests that software and infrastructure will fail, and we want to protect ourselves against that. NServiceBus alleviate that by protecting us against data loss and boost our system resiliency.
+The fallacies of distributed computing suggests that software and infrastructure will fail, and we want to protect ourselves against that. NServiceBus protects us against data loss and boost our system resiliency.
 
 ![pic](src/eCommerce/images/figure1.jpg)
 
