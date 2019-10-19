@@ -1047,10 +1047,39 @@ This pattern sends a message with the send method, but waits for a response mess
 
 > a better alternatives is using sagas with SignalR for instance.
 
-Example
+**Example**
+
+[PriceResponse.cs](src/eCommerce/eCommerce.Messages/PriceResponse.cs)
+
+```sh
+   public class PriceResponse: IMessage
+    {
+        public int Price { get; set; }
+    }
+```
+>> note that IMessage derived from ICommand and IEvent.
+
 
 [PriceRequestHandler.cs](src/eCommerce/eCommerce.Order/PriceRequestHandler.cs)
 
+```sh
+ public class PriceRequestHandler: IHandleMessages<PriceRequest>
+    {
+        public async Task Handle(PriceRequest message, IMessageHandlerContext context)
+        {
+		await context.Reply(new PriceResponse {Price = await PriceCalculator.GetPrice(message)})
+		.ConfigureAwait(false);
+        }
+    }
+```
+
 [HomeController.cs](src/eCommerce/eCommerceUI/Controllers/HomeController.cs)
 
->> note that IMessage derived from ICommand and IEvent.
+```sh
+var priceResponse = await endpoint.Request<PriceResponse>(
+                new PriceRequest { Weight = order.Weight }
+                );
+```
+
+
+
