@@ -1093,3 +1093,170 @@ executed. The saga itself **maintains state** in the form of an **object** we de
 As long as the **saga** runs, it persists its state in a durable storage. The way sagas implementation in NServiceBus is a very open design.
 
 #### Defining Sagas
+
+To define a **saga** we use the **Saga** base class contained in the NServiceBus core. **Saga** is a generic class, it needs the type of the object that we wrote to maintain the state of the saga, as long as it's running. This object is persisted along the way. Define which message triggers the creation of a new saga by using **theIAmStartedByMessages** (*e.g. ProcessOrderCommand*) interface. As a generic parameter, the message type is supplied, so when the saga receives the **StartOrder message**, it starts the **workflow**. A new state object is **created** and **persisted** (*e.g. ProcessOrderSagaData*), but only when **no existing saga** data can be found for the message. Other messages are handled in the same way using the *IHandleMessages* interface (*e.g IOrderPlannedMessage & IOrderDispatchedMessage*). The ending of the saga is not a requirement, it can potentially run forever.
+
+[ProcessOrderSaga.cs](src/eCommerce/eCommerce.Saga/ProcessOrderSaga.cs)
+```sh
+    public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
+        IAmStartedByMessages<ProcessOrderCommand>, //a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
+                                                   //its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+        IHandleMessages<IOrderPlannedMessage>,
+        IHandleMessages<IOrderDispatchedMessage>
+    {
+	//...
+	}
+```
+
+**To end a Saga** use *MarkAsComplete*. This signals NServiceBus to throw away the data object in the storage. All messages that arrive after MarkAsComplete is called are ignored. 
+```sh
+   public async Task Handle(IOrderDispatchedMessage message, IMessageHandlerContext context)
+        {
+         //...
+            MarkAsComplete();
+        }
+```
+
+
+An abstract method **ConfigureHowToFindSaga** in a saga class tells NServiceBus what saga belongs to what messages, matching between all messages that are received by the saga and the data object that the saga has persisted. 
+
+**ConfigureHowToFindSaga**
+```sh
+//configure how NService bus find the saga data storage using mapping between received command (ProcessOrderCommand) and ProcessOrderSagaData storage
+        protected override void ConfigureHowToFindSaga(SagaPropertyMapper<ProcessOrderSagaData> mapper)
+        {
+            //Select s.OrderId from ProcessOrderSagaData s where s.OrderId = message.OrderId (i.e. ProcessOrderCommand.OrderId )
+            //Read the OrderId property from ProcessOrderCommand and matched with OrderId property from the saga data store
+            mapper.ConfigureMapping<ProcessOrderCommand>(
+                    msg => msg.OrderId //ProcessOrderCommand part
+                )
+                .ToSaga(
+                    s => s.OrderId //ProcessOrderSagaData part
+                );
+        }
+```
+
+> In the example OrderId property has to be unique
+
+>  Using this mapping, a query is constructed to the underlying data store to fetch the object. If it doesn't exist, it is assumed that no saga exists for the message. If we want to handle that in code, see the IHandleSagaNotFound interface.
+
+
+
+
+In the **saga context**, The **request/response pattern** previously explained, it is also used in the handlers of messages the saga sends to services. It will reply directly to the saga. NServiceBus knows where to send it, because the saga details are invisibly present in the message. We **don't** need to **specify a mapping** for the message in **ConfigureHowToFindSaga**, because the details of how to find the saga are also known.
+
+```sh
+public void Handle(RequestDataMessage message, IMessageHandlerContext context){
+	var response = new DataResponseMessage
+	{
+		 OrderId = Message.OrderId,
+		 String = message.String
+	};	
+	await context.Reply(response).ConfigureAwait(false);
+}
+```
+
+**ReplyToOriginator**
+
+
+The saga abstract base class also contains the adverse of the originator. The Originator is a service that started the saga. By using the  ReplyToOriginator method in the saga class, you can reply directly to the originator without the need for routing.
+
+```sh
+ public async Task Handle(IOrderDispatchedMessage message, IMessageHandlerContext context)
+        {
+            logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
+
+            //When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
+            //KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
+            await ReplyToOriginator(context: context, message: new OrderProcessedMessage()
+            {
+                AddressTo = Data.AddressTo,
+                AddressFrom = Data.AddressFrom,
+                Price = Data.Price,
+                Weight = Data.Weight
+            })
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            //tell the saga it's done with the MarkAscomplete method
+            //The saga will throw away the data object in the configured storage
+            MarkAsComplete();
+        }
+```
+
+
+**Sagas** are designed to coordinate the message flow and make decisions using business logic. The actual work is delegated to services using the messages: 
+
+- **Messages** that **start** the **saga** might be **more** than **one**
+- **Messages** **won't** always arrive in the **same order**  (e.g. service is delayed because a server is down)
+- **bear in mind the eight fallacies of distributed computing** when designing a saga
+
+#### saga design patterns
+
+- **command pattern** : message or messages come in that start a saga instance, then a command is being sent to the service , When a confirmation comes back in the form of an event, a new command is sent executing the next step, and so on. Meantime, there could be some decision making going on like what command to send with what data. That's perfectly fine to implement in a saga, as long as the heavy lifting is done by the services themselves.
+![pic](src/eCommerce/images/figure6.jpg)
+
+- **observer pattern** where saga waits until all steps are done by the different services. In the example, the saga makes sure the order is approved and picked. Only when both events generated by other services have been received, it sends out the command to ship to the shipping service. 
+![pic](src/eCommerce/images/figure7.jpg)
+We could also use an enum in the saga data to keep track of the step or state the saga is in. And only when a ceratin step is reached, listen for certain events and send certain commands.
+![pic](src/eCommerce/images/figure8.jpg)
+
+- **routing slip**: Some process decides what steps have to be taken for a certain order. The steps to take are contained in the message. So when, for example, an order comes in that only has the pick step, the approval step will be skipped. 
+![pic](src/eCommerce/images/figure9.jpg)
+
+- **multiple sagas** : If picking an order is a process by itself that involves multiple microservices, we just create a saga for it. The saga could then be activated by the same pick order message, and report back with a message or event when it's complete. 
+![pic](src/eCommerce/images/figure10.jpg)
+
+
+#### Sagas Persistence
+
+- **RavenDB** : data object of the message can be serialized and stored as a document. NServiceBus will create an index based on the property that is marked with a unique attribute in the data class. NServiceBus will fetch the document using this index, so it doesn't have to go through all the documents to find the right one. 
+
+> Note that NServiceBus V6+ doesn't require anymore the unique attribute. 
+
+- **NHibernate** : persistence supports relational da tabases. We should know that child objects in the saga's data object are serialized and put in one column. And each collection use is going to result in extra tables, **the more tables, the more chance locks will occur**. By marking the properties in the data object as virtual, a derive class is created behind the scenes that checks if the data from the extra tables is really needed. 
+
+- **Azure saga persistence** is a storage mechanism built on Azure table storage. It is very low cost and easy to set up in Azure. It supports the storgage of any type table storage can handle. 
+
+- **SQL Persistence** which uses json.net to persist saga's in a standard single data base such as SQL Server and MySQL.
+
+- **Azure Service Fabric** is one of the newer technologies supported
+
+- several **other options** developed by the community.
+
+
+#### Timeouts or Saga Reminders
+
+Timeouts are a powerful feature of sagas that are like a reminder we get of an agenda entry. When we set a timeout, a message is sent to NServiceBus' internal Timeout Manager. With the sending of the message, we specify a certain time span like in 2 hours, or an absolute time like August 8 at 7:00 PM. When it's time, the Timeout Manager sends the same message back to the saga which requested a timeout. 
+
+This way we can, for example, send a registered user an email after a certain amount of time when he forgot to confirm his email address. When the saga has been completed in the meantime, the timeout message, like all messages for the saga, are ignored. 
+
+
+> Let's say we have somebody who has to approve of an order, that person will receive an email with the request to approve. But persons tend to forget things, so we want to remind the person to approve in two days. In the saga, we can use the RequestTimeout method. The method uses a class that represents a message that is eventually sent back to the saga. In the first overload of RequestTimeout, we don't specify any properties for ApprovalTimeout. It might be the saga data already contains everything we need, and we just need to be reminded. The only parameter we pass into a RequestTimeout is the absolute time at which we want the message back. In the second overload, we don't need to use generics, because we're creating a new instance of ApprovalTimeout ourselves, filling the SomeState property. In the third overload, the generics are back, and we can use an action delegate to fill the ApprovalTimeout instance. To handle the timeout being sent back to the saga, we implement the IHandleTimeouts generic interface. It lets us create a method called Timeout with the timeout type as aparameter. Here we take the action needed when the time is up. In this case, send the approval person a reminder message.
+
+```sh
+await RequestTimeout<ApprovalTimeout>(DateTime.AddDays(2));
+
+await RequestTimeout(DateTime.AddDays(2), new ApprovalTimeout{SomeState = state});
+
+await RequestTimeout<ApprovalTimeout>(TimeSpan.FromDays(2, t=> t.SomeState = state);
+```
+
+
+```sh
+    public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
+        IAmStartedByMessages<ProcessOrderCommand>, //a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
+                                                   //its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+        IHandleMessages<IOrderPlannedMessage>,
+        IHandleMessages<IOrderDispatchedMessage>
+        IHandleTimeouts<ApprovalTimeout>
+    {
+	//...
+	
+		public void Timeout(ApprovalTimeout state, IMessageHandlerContext context) {
+		
+		
+		}
+	}
+```
