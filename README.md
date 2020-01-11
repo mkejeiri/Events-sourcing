@@ -1233,16 +1233,21 @@ Timeouts are a powerful feature of sagas that are like a reminder we get of an a
 This way we can, for example, send a registered user an email after a certain amount of time when he forgot to confirm his email address. When the saga has been completed in the meantime, the timeout message, like all messages for the saga, are ignored. 
 
 
-> Let's say we have somebody who has to approve of an order, that person will receive an email with the request to approve. But persons tend to forget things, so we want to remind the person to approve in two days. In the saga, we can use the RequestTimeout method. The method uses a class that represents a message that is eventually sent back to the saga. In the first overload of RequestTimeout, we don't specify any properties for ApprovalTimeout. It might be the saga data already contains everything we need, and we just need to be reminded. The only parameter we pass into a RequestTimeout is the absolute time at which we want the message back. In the second overload, we don't need to use generics, because we're creating a new instance of ApprovalTimeout ourselves, filling the SomeState property. In the third overload, the generics are back, and we can use an action delegate to fill the ApprovalTimeout instance. To handle the timeout being sent back to the saga, we implement the IHandleTimeouts generic interface. It lets us create a method called Timeout with the timeout type as aparameter. Here we take the action needed when the time is up. In this case, send the approval person a reminder message.
+*Let's say we have somebody who has to approve of an order, that person will receive an email with the request to approve. But persons tend to forget things, so we want to remind the person to approve in two days. In the saga, we can use the RequestTimeout method. The method uses a class that represents a message that is eventually sent back to the saga. In the first overload of RequestTimeout, we don't specify any properties for ApprovalTimeout. It might be the saga data already contains everything we need, and we just need to be reminded.* 
 
 ```sh
+//The only parameter we pass into a RequestTimeout is the absolute time at which we want the message back
 await RequestTimeout<ApprovalTimeout>(DateTime.AddDays(2));
 
+//we don't need to use generics, because we're creating a new instance of ApprovalTimeout ourselves
+//..filling the SomeState property
 await RequestTimeout(DateTime.AddDays(2), new ApprovalTimeout{SomeState = state});
 
+//We use generics and an action delegate to fill the ApprovalTimeout instance
 await RequestTimeout<ApprovalTimeout>(TimeSpan.FromDays(2, t=> t.SomeState = state);
 ```
 
+To **handle** the **timeout** being sent back to the saga, we implement the **IHandleTimeouts** generic interface.
 
 ```sh
     public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
@@ -1255,8 +1260,7 @@ await RequestTimeout<ApprovalTimeout>(TimeSpan.FromDays(2, t=> t.SomeState = sta
 	//...
 	
 		public void Timeout(ApprovalTimeout state, IMessageHandlerContext context) {
-		
-		
+		//Here we take the action needed when the time is up. In this case, send the approval person a reminder message.		
 		}
 	}
 ```
