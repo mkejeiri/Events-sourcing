@@ -1843,7 +1843,7 @@ As a **channel**, **gateway** uses **HTTP with SSL** out of the box, but it's al
 
 **gateway setup example**
 
-![pic](src/RabbitMq/Examples/images/figure14.JPG)
+![pic](src/eCommerce/images/figure14.jpg) 
 
 There is a **Headquarters site**, and a **SiteA** (sales). Each **endpoint has gateway enabled**, which has its **own 'in'** and **'out' queue**, by which **receiving** and **sending** of messages to the outside world is possible. 
 
