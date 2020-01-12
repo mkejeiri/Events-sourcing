@@ -1937,7 +1937,7 @@ On the screen we'll see a **realtime graph** showing one or more **performance c
 	performanceCounters.EnableSLAPerformanceCounters(TimeSpan.FromMinutes(3));
 ```
 
-** Performance counters for NServiceBus**  exist for every **queue** individually, and they are automatically used if present. 
+**Performance counters for NServiceBus**  exist for every **queue** individually, and they are automatically used if present. 
 It includes (measure the rate of messages per second):
 
 - **Successful message processing rate**. 
