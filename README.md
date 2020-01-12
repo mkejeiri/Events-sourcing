@@ -1648,9 +1648,9 @@ Next register the step in the pipeline. We just have to use the **endpointConfig
 	public class Registration: RegisterStep
 	{ 
 		public Registration() : base( 
-								"id", 
-								typeof(SampleBehavior),
-								"A sample pipeline step") { } 
+					"id", 
+					typeof(SampleBehavior),
+					"A sample pipeline step") { } 
 	}
 ```
 Or derive a class from **RegisterStep**, and pass an **ID**, the **typeof** the **behavior**, and a description to the base constructor. 
@@ -1665,8 +1665,168 @@ This time we have to tell it what the **ID** is of the **step** we want to **rep
 
 
 
+**Message Mutators**
+
+A **message mutators** is used to **manipulate** a **message** before it hits the **handler** for **incoming messages**, and **before** it's **handed over** to the **transport** for **outgoing messages**. **Mutators** are also **used** internally by **NServiceBus**. 
+
+Features like the **data bus** and **property encryption** make use of them. **Applicative message mutators** do their work after **deserialization** in a incoming scenario and before **serialization in an outgoing scenario**, but the **message** is still **available** as an **object**. 
+
+
+A good use case for **applicative** message **mutators** is if we want to do **validation** on the **message**. we can program **implicative message mutators** for the incoming or the outgoing **pipeline** (e.g. interfaces **IMutateIncomingMessages**, **IMutateOutgoingMessages**), or use **IMessageMutator** that inherits from both the other interfaces. 
+
+
+
+**Transport mutators** are kicked off before **deserialization** for the **incoming pipeline** and after **serialization** in the **outgoing pipeline**. We have access to the **raw byte array** of the **message** (i.e. ideal to use program **compression** and **decompression** of **messages**). 
+We use **IMutateIncomingTransportMessages** to create a mutator just for incoming messages or **IMutateOutgoingTransportMessages** for outgoing messages. **IMutateTransportMessages** is used both for incoming and outgoing. 
+
+Last, we have to register a **mutator** with **NServiceBus** using the **RegisterComponents** method that accepts a delegate with a parameter that has the Component object on which you can call **ConfigureComponent**. 
+
+```sh
+	//Registering a Message Mutator
+	endpointConfiguration.RegisterComponents(components =>
+		{ 
+			components.ConfigureComponent<ValidationMessageMutator>
+			//Here a new mutator object is created every time it's needed
+				(DependencyLifecycle.InstancePerCall);
+		});
+```
+The generic parameter is your message mutator type. You can also specify what the lifecycle of the mutator object should be. 
 
 
 
 
+**Unit Of Work**
+
+A unit of work allows us to execute code when a message **begins processing** in the **pipeline** in the Begin method and after it ends processing in the end method. We need implement the **IManageUnitsOfWork** interface.
+
+```sh
+	public class MyUnitOfWork: IManageUnitsOfWork
+	{
+		public Task Begin(){}
+		public Task End(System.Exception ex = null){}
+	}
+```
+
+When an **exception** occurs in the pipeline, it is passed to the **End method**. 
+
+> Unit of works are are easier to work with than custom behaviors but less powerful, and are great to execute code that always has to be executed with every message (to avoid DRY in every handler) => e.g SaveChanges on an ORM or database Context object. For instance, we can't wrap the begin and end in a using statement. 
+
+**Units of work must be registered** in the same way as **mutators**.
+
+
+**Headers**
+
+**NServiceBus** itself relies heavily on headers to do its magic, headers are:
+
+- Secondary information about the message that is not directly related to its business purpose 
+- Similar to HTTP headers
+- Should contain metadata only : e.g. data needed for the infrastructure, security token used by a security mechanism like OAuth2
+- Can be written and read in behaviors, mutators and handlers
+
+Apart from handlers, the header collection of a message can be manipulated and read in behaviors and mutators, so the header logic can be easily shared.
+
+a few examples:
+
+**Message Interaction Headers**
+
+- NServiceBus.MessageId : Every message gets a unique MessageId
+
+- NServiceBus.CorrelationId : used when using the **Bus.Reply** method. It contains the **Id** of the message that **triggered** the reply, but the **receiver** of the reply knows what the original message was
+
+- NServiceBus.MessageIntent : can be sent, publish, subscribe, unsubscribe, or reply 
+
+- NServiceBus.ReplyToAddress : ReplyToAddress is the explanation behind the magic of **Bus.Reply**. It contains the address of the endpoint to reply to, so no routing is needed
+
+
+**Audit Headers**
+
+When sending messages to the audit queue and also the error queue, certain headers are added by NServiceBus :
+
+- NServiceBus.ProcessingStarted:  handling of the message started
+- NServiceBus.ProcessingEnded: handling of the message ended
+- NServiceBus.ProcessingEndpoint: information about the endpoint name 
+- NServiceBus.ProcessingMachine:  information about the endpointthe machine
+
+
+To read a header in the handler, we get the header dictionary by accessing the MessageHeaders property on the MessageHandler context. You can then read an NServiceBus header by using the headers helper type, or just we use a string if it's a custom header.
+
+```sh
+	public async TaskHandle(MyMessage message, 
+		IMessageHandlerContext context)
+	{
+		IDictionary<string, string> headers = 
+					context.MessageHeaders;
+		string nsbVersion= headers[Headers.NServiceBusVersion]; 
+		string customHeader= headers["MyCustomHeader"];
+	}
+
+```
+
+**Mutators Example**
+
+```sh
+
+	public class MutateIncomingMessages :
+    IMutateIncomingMessages
+	{
+		public Task MutateIncoming(MutateIncomingMessageContext context)
+		{
+			// the incoming headers
+			var headers = context.Headers;
+
+			// the incoming message
+			// optionally replace the message instance by setting context.Message
+			var message = context.Message;
+
+			return Task.CompletedTask;
+		}
+	}
+
+```
+
+**behaviors Example**
+
+```sh
+	public class SkipSerializationForInts :
+		Behavior<IOutgoingLogicalMessageContext>
+	{
+		public override Task Invoke(IOutgoingLogicalMessageContext context, Func<Task> next)
+		{
+			var outgoingLogicalMessage = context.Message;
+			if (outgoingLogicalMessage.MessageType == typeof(int))
+			{
+				var headers = context.Headers;
+				headers["MyCustomHeader"] = outgoingLogicalMessage.Instance.ToString();
+				context.SkipSerialization();
+			}
+			return next();
+		}
+
+		public class Registration :
+			RegisterStep
+		{
+			public Registration()
+				: base(
+					stepId: "SkipSerializationForInts",
+					behavior: typeof(SkipSerializationForInts),
+					description: "Skips serialization for integers")
+			{
+			}
+		}
+	}	
+```
+
+To **set a header**, we use the **sendOptions class**, which has a **SetHeader** method, **IMessageHandlerContext**. 
+
+```sh
+	public void Handle(MyMessage message, 
+						IMessageHandlerContext context) 
+	{ 
+				SomeOtherMessage someOtherMessage = newSomeOtherMessage(); 
+				var sendOptions = new SendOptions();
+				sendOptions.SetHeader("MyCustomHeader", "My custom value");
+				await context.Send(someOtherMessage, sendOptions); }
+```
+
+For **behaviors**, we just write directly to the dictionary you get from **context.Headers**, and for **mutators**, we write to the dictionary we get from accessing the **OutgoingHeaders** property of the context object.
 
