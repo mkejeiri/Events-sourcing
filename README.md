@@ -1697,7 +1697,7 @@ The generic parameter is your message mutator type. You can also specify what th
 
 **Unit Of Work**
 
-A unit of work allows us to execute code when a message **begins processing** in the **pipeline** in the Begin method and after it ends processing in the end method. We need implement the **IManageUnitsOfWork** interface.
+A unit of work allows us to execute code when a message **begins processing** in the **pipeline** in the **Begin method** and after it ends processing in the **end method**. For that to work, we need implement the **IManageUnitsOfWork** interface.
 
 ```sh
 	public class MyUnitOfWork: IManageUnitsOfWork
@@ -1709,7 +1709,7 @@ A unit of work allows us to execute code when a message **begins processing** in
 
 When an **exception** occurs in the pipeline, it is passed to the **End method**. 
 
-> Unit of works are are easier to work with than custom behaviors but less powerful, and are great to execute code that always has to be executed with every message (to avoid DRY in every handler) => e.g SaveChanges on an ORM or database Context object. For instance, we can't wrap the begin and end in a using statement. 
+> Unit of works are are easier to work with than custom behaviors but less powerful, i.e. we can't wrap the **begin method** and **end method** in a using statement. Unit of works are great to execute code that always has to be executed with every message (to avoid DRY in every handler) => e.g SaveChanges on an ORM or database Context object.   
 
 **Units of work must be registered** in the same way as **mutators**.
 
@@ -1718,40 +1718,40 @@ When an **exception** occurs in the pipeline, it is passed to the **End method**
 
 **NServiceBus** itself relies heavily on headers to do its magic, headers are:
 
-- Secondary information about the message that is not directly related to its business purpose 
+- Secondary information about the message that is **not** directly **related** to its **business** purpose. 
 - Similar to HTTP headers
-- Should contain metadata only : e.g. data needed for the infrastructure, security token used by a security mechanism like OAuth2
-- Can be written and read in behaviors, mutators and handlers
+- Should contain **metadata** only : e.g. **data** needed for the **infrastructure**, e.g. **security token** used by a security mechanism like **OAuth2**.
+- Can be written and read in **behaviors**, **mutators** and **handlers**.
 
-Apart from handlers, the header collection of a message can be manipulated and read in behaviors and mutators, so the header logic can be easily shared.
+A part from **handlers**, the **header collection** of a message can be **manipulated** and **read** in **behaviors** and **mutators**, so the **header logic** can be easily **shared**.
 
-a few examples:
+##### a few examples:
 
 **Message Interaction Headers**
 
-- NServiceBus.MessageId : Every message gets a unique MessageId
+- **NServiceBus.MessageId** : Every message gets a unique MessageId
 
-- NServiceBus.CorrelationId : used when using the **Bus.Reply** method. It contains the **Id** of the message that **triggered** the reply, but the **receiver** of the reply knows what the original message was
+- **NServiceBus.CorrelationId** : used when using the **Bus.Reply** method. It contains the **Id** of the message that **triggered** the reply, but the **receiver** of the reply knows what the original message was
 
-- NServiceBus.MessageIntent : can be sent, publish, subscribe, unsubscribe, or reply 
+- **NServiceBus.MessageIntent** : can be sent, publish, subscribe, unsubscribe, or reply 
 
-- NServiceBus.ReplyToAddress : ReplyToAddress is the explanation behind the magic of **Bus.Reply**. It contains the address of the endpoint to reply to, so no routing is needed
+- **NServiceBus.ReplyToAddress** : **ReplyToAddress** is the explanation behind the magic of **Bus.Reply**. It contains the **address** of the **endpoint** to **reply** to, so no **routing** is needed
 
 
 **Audit Headers**
 
-When sending messages to the audit queue and also the error queue, certain headers are added by NServiceBus :
+When sending messages to the **audit queue** and also the **error queue**, certain **headers** are added by **NServiceBus**:
 
-- NServiceBus.ProcessingStarted:  handling of the message started
-- NServiceBus.ProcessingEnded: handling of the message ended
-- NServiceBus.ProcessingEndpoint: information about the endpoint name 
-- NServiceBus.ProcessingMachine:  information about the endpointthe machine
+- **NServiceBus.ProcessingStarted**: information about when the handling of the message started.
+- **NServiceBus.ProcessingEnded**: information about when the handling of the message ended.
+- **NServiceBus.ProcessingEndpoint**: information about the endpoint name.
+- **NServiceBus.ProcessingMachine**:  information about the endpointthe machine.
 
 
-To read a header in the handler, we get the header dictionary by accessing the MessageHeaders property on the MessageHandler context. You can then read an NServiceBus header by using the headers helper type, or just we use a string if it's a custom header.
+To read a **header** in the **handler**, we get the **header dictionary** by accessing the **MessageHeaders** property on the **MessageHandler context**. You can then read an **NServiceBus header** by using the **headers helper** type, or just we use a **string** if it's a **custom header**.
 
 ```sh
-	public async TaskHandle(MyMessage message, 
+	public async Task Handle(MyMessage message, 
 		IMessageHandlerContext context)
 	{
 		IDictionary<string, string> headers = 
@@ -1828,5 +1828,220 @@ To **set a header**, we use the **sendOptions class**, which has a **SetHeader**
 				await context.Send(someOtherMessage, sendOptions); }
 ```
 
-For **behaviors**, we just write directly to the dictionary you get from **context.Headers**, and for **mutators**, we write to the dictionary we get from accessing the **OutgoingHeaders** property of the context object.
+For **behaviors**, we just write directly to the dictionary you get from **context.Headers**, and for **mutators**, we write to the **dictionary** we get from accessing the **OutgoingHeaders** property of the **context** object.
+
+
+
+**Gateway: Multi-site Messaging**
+
+Enterprises often have multiple physical sites, e.g. headquarters and sales are in different locations that have their own IT infrastructure. The obvious solution to send messages across is to use **VPN**, but if that for some reason **isn't an option**, we can use **NServiceBus' gateway feature**. **Gateway** is for sites that are **logically different**, so it's not meant for **replication**. We could use the regular way to replicate within the IT infrastructure such as send **snapshot, SQL Server**, or **RavenDB replication**. 
+
+When using **gateway**, we're going to write messages that are specifically meant to **cross the gateway** using a **special method** on the **bus object**. This is **designed intentionally** with the **fallacies of distributed computing** in mind. 
+
+**Events** use the **publish** **subscribe** **mechanism**, which is not **supported**, because that is meant to be **used within one site**. 
+As a **channel**, **gateway** uses **HTTP with SSL** out of the box, but it's also possible to create **custom channel support**. 
+
+**gateway setup example**
+
+![pic](src/RabbitMq/Examples/images/figure14.JPG)
+
+There is a **Headquarters site**, and a **SiteA** (sales). Each **endpoint has gateway enabled**, which has its **own 'in'** and **'out' queue**, by which **receiving** and **sending** of messages to the outside world is possible. 
+
+Once a message is received, it is put into the **right queues** to be **handled by the handlers of the endpoint**. 
+
+**[Implemention](https://docs.particular.net/nservicebus/gateway/)**
+
+> Note that In NServiceBus version 5 and above, the gateway is provided by the NServiceBus.Gateway NuGet package, [More...](https://docs.particular.net/nservicebus/gateway/).
+
+1- We specify the different **sites** by using a **key**. Each site has an **address** and a **channel** it should use. 
+```sh
+	var gatewayConfig = endpointConfiguration.Gateway(new InMemoryDeduplicationConfiguration());
+	gatewayConfig.AddReceiveChannel("http://localhost:25899/Headquarters/");
+	gatewayConfig.AddSite("RemoteSite", "http://localhost:25899/RemoteSite/");
+```
+
+2- We **enable the gateway** in each **endpoint** using it by using the **EnableFeature** method on the **Configuration** object.
+
+```sh
+endpointConfiguration.Gateway();
+```
+
+3- Now We're ready to send the message. We Use the **SendToSites** method for that, It accepts an **array** of site **keys** and the **message**. 
+
+```sh
+	await endpoint.SendToSites(new[]
+	{
+		"SiteA",
+		"SiteB"
+	}, new MyMessage()).ConfigureAwait(false);
+```
+
+**Gateway** has the following **features** :
+- **Automatic retries**.
+- **Deduplication** of **incoming messages**. 
+- **SSL**.
+- **data** bus support.
+- gateway can listen to **multiple channels** of different types at the same time.
+- although there's only **HTTP** support out of the box, we can **create** our **own channels**.
+
+[More examples...](https://docs.particular.net/samples/gateway/)
+[More examples...](https://docs.particular.net/nservicebus/gateway/multi-site-deployments)
+
+
+**Performance Counters**
+Windows comes with a built-in performance counter system. We can view them in **Computer Management > System Tools > Performance > Monitoring Tools**, and then **Performance Monitor**. 
+
+On the screen we'll see a **realtime graph** showing one or more **performance counters**. An obvious one is, for example, **CPU load**. 
+**Performance counters** cannot only be **read by humans**, but  also by software because they're exposed with something called **Windows Management Instrumentation** or **WMI**. **The. NET class library** contains **classes** to **read** from them and **write** to them.
+
+**MSMQ** has a lot of **performance counters** to **monitor** things like number of messages in queues, but they're not focused on performance.  
+**MSMQ** is not the only **transport** that can be used by **NServiceBus**; for these reasons, **NServiceBus** has its own **performance counters**, they are automatically installed when we **run** the **setup** for the Particular Software Suite, but we can also **install** them with a **PowerShell command**. 
+
+```sh
+	endpointConfiguration.EnableCriticalTimePerformanceCounter();
+	var performanceCounters = endpointConfiguration.EnableWindowsPerformanceCounters();
+	performanceCounters.EnableSLAPerformanceCounters(TimeSpan.FromMinutes(3));
+```
+
+** Performance counters for NServiceBus**  exist for every **queue** individually, and they are automatically used if present. 
+It includes (measure the rate of messages per second):
+
+- **Successful message processing rate**. 
+- **queue message receive rate**.
+- **failed message processing rate**.
+
+- **Critical time** :  measures the time it takes from the sending from the client machine, until the successful processing of the service is done. This way we can monitor if our architecture adheres to SLAs, for example. This counter is automatically used when using NServiceBus hosting. With self hosting, it has to be enabled by configuration.
+
+- **SLA violation countdown**: acts an early warning system to warn we if the SLA is danger of being breached. It tells we the number of seconds left until the SLA is violated. It is also enabled by default using NServiceBus hosting, but requires explicit activation with self hosting.
+
+[More...](https://docs.particular.net/monitoring/metrics/performance-counters)
+[More on usage...](https://docs.particular.net/samples/performance-counters/)
+[More on upgrade version...](https://docs.particular.net/nservicebus/upgrades/externalize-perfcounters)
+
+
+
+**Scaling Services**
+
+If the service is overloaded (using performance counters) in the sense that it takes too long for a message to process because of a queue that is becoming too full. If the cause of this is the processing by the service that is slow and not the infrastructure, then you can scale your service. 
+**Scaling up** is **upgrading** the **hardware** or **virtual hardware** it runs on, or placing the service on the server with more power. 
+
+We will focus on **Scaling out** which is placing the same service on multiple machines. How to scale out depends on what transport we're using:
+
+- If we're using a broker style transport like RabbitMQ or SQL Server Transport, we have just to deploy the service to multiple servers, and we're done. Because the transport is centralized in nature, all services will use the same queue, and NServiceBus will take care of the fact that a message is only processed by one instance of the service. 
+
+- MSMQ, queues are on the machines the services run on, (i.e. just placing another instance of the service on multiple machines won't work). The sender-side distribution feature helps out. We put multiple instances on the server on different machines. These instances are called workers. Then there are two parts of configuration to do. 
+
+1- Map a specific message to a logical endpoint, which is like a virtual endpoint.
+2- Map the logical endpoints to multiple physical machines.
+
+> The sending service will just loop through the list of configured machines to determine the destination of the message. There's no feedback on the availability of workers, so when one worker is down, messages for that worker will just pile up into its queue.
+
+```sh
+	//configure the logical endpoints. 
+	//We do this at the time you configure the transport for the endpoint. 
+	//We can get a routing object by calling Routing on the transport object. 
+	var transport = endpointConfiguration.UseTransport<MsmqTransport>();
+	var routing = transport.Routing();
+```
+[More...](https://docs.particular.net/transports/msmq/sender-side-distribution)
+
+```sh
+//configure a logical endpoint for a message by calling RouteToEndpoint on the routing object. 
+routing.RouteToEndpoint(
+    assembly: typeof(AcceptOrder).Assembly,
+    destination: "Sales");
+```
+
+
+```sh
+//To map the logical endpoints to physical machines, use the instance-mapping.xml file. 
+//In it we use the name of the logical endpoint to map to multiple physical machines.
+<endpoints>
+  <endpoint name="Sales">
+    <instance machine="VM-S-1"/>
+    <instance machine="VM-S-2"/>
+    <instance machine="VM-S-3"/>
+  </endpoint>
+</endpoints>
+```
+[More...](https://docs.particular.net/samples/scaleout/)
+
+
+
+**Unit Testing of Sagas and Handlers**
+
+**Unit testing of NServiceBus** handlers and sagas is hard without any help from NServiceBus. How do you test what message should come out of ahandler when sending in a command, for example? It wouldn't be possible without touching the **bare metal** of the **transport**. 
+**NServiceBus** helps us with the **NServiceBus.Testing NuGet package**. It makes the unit testing of **handlers and sagas** a **breeze**, and there is no specific testing framework required to make use of it.
+
+[More...] (https://docs.particular.net/samples/unit-testing/)
+
+
+using eCommerce.Dispatch;
+using eCommerce.Order;
+using eCommerce.Messages;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NServiceBus.Testing;
+
+```sh
+using eCommerce.Dispatch;
+using eCommerce.Order;
+using eCommerce.Messages;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NServiceBus.Testing;
+namespace eCommerce.Tests
+{
+    [TestClass]
+    public class DispatchOrderHandlerSpecs
+    {
+        [TestMethod]
+        public void Send_DispatchOrderCommand_receive_IOrderDispatchedMessage()
+        {
+            Test.Handler<DispatchOrderHandler>()
+                .ExpectReply<IOrderDispatchedMessage>(m => true)
+                .OnMessage<DispatchOrderCommand>();
+        }
+    }
+}
+
+```
+
+```sh
+using eCommerce.Messages;
+using eCommerce.Saga;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NServiceBus.Testing;
+
+
+namespace eCommerce.Tests
+{
+    [TestClass]
+    public class ProcessOrderSagaSpecs
+    {
+        [TestMethod]
+        public void Send_ProcessOrderCommand_when_PlanOrderCommand_sent()
+        {
+            Test.Saga<ProcessOrderSaga>()
+                //Expected result first!
+                .ExpectSend<PlanOrderCommand>()
+                //is used when the message is a concrete type and not an interface.
+                .When((saga, context) => saga.Handle(new ProcessOrderCommand(), context));
+        }
+
+        [TestMethod]
+        public void Send_DispatchOrderCommand_when_OrderDispatchedMessage_received()
+        {
+            Test.Saga<ProcessOrderSaga>()
+                //Expected result first!
+                .ExpectReplyToOriginator<OrderProcessedMessage>()
+                //WhenHandling is used when the message is an interface and not a concrete type.
+                .WhenHandling<IOrderDispatchedMessage>() 
+                .AssertSagaCompletionIs(true); //we all done we expect the saga to be complete
+        }
+    }
+}
+
+```
+
+
+
 
