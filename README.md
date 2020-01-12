@@ -1359,3 +1359,49 @@ We can also **forward a message** to **another queue** :
 ```
 This will not stop the **current handler** from **executing further**.
 
+
+
+**Property Encryption**
+
+Property encryption is feature of **NServiceBus** used if a property contains **sensitive data**. This data will be encrypted so that the data isn't visible when sent over the wire and stored in the transport queue. Instead of specifying the string as the data type for the property, we use **WireEncryptedString**.
+
+It's also needed to **configure the encryption** in the **config file** or in **code**. The **Rijndael algorithm** is used by **default**. Rijndael is a symmetrical algorithm. That means the key for encryption and decryption is the same, and therefore has to be known at the sender side, as well as the receiver side. Although possible, it's probably **not wise** to configure the key in the **config file** of each **microservice**. Shared configuration is recommended here by using the **IProvideConfiguration** interface in a shared DLL, for example. In the shared class, we then pull the key out of some **secured storage**. If we don't want to use Rijndael, we can **implement** our **own encryption** by using the **IEncryptionService** interface, and configure NServiceBus to use the custom algorithm. 
+
+```sh
+
+public class ProvideConfiguration :
+    IProvideConfiguration<RijndaelEncryptionServiceConfig>
+{
+    public RijndaelEncryptionServiceConfig GetConfiguration()
+    {
+	
+		//consists of a key property containing the current key and a collection of ExpiredKeys.
+        return new RijndaelEncryptionServiceConfig
+        {
+            Key = "gdDbqRpQdRbTs3mhdZh9qCaDaxJXl+e6",
+            KeyIdentifier = "2015-10",
+            KeyFormat = KeyFormat.Base64,
+            ExpiredKeys = new RijndaelExpiredKeyCollection
+            {
+                new RijndaelExpiredKey
+                {
+                    Key = "abDbqRpQdRbTs3mhdZh9qCaDaxJXl+e6",
+                    KeyIdentifier = "2015-09",
+                    KeyFormat = KeyFormat.Base64
+                },
+				
+				//If decryption of the property fails, NService will try the keys and ExpiredKeys to decrypt.
+                new RijndaelExpiredKey
+                {
+                    Key = "cdDbqRpQdRbTs3mhdZh9qCaDaxJXl+e6"
+                }
+            }
+        };
+    }
+}
+
+```
+> All properties that have the WiredEncryptedString type will be encrypted using the current key, but lingering messages might be arriving at this endpoint that were encrypted using an older key, and the older keys are in the ExpiredKeys collection. If decryption of the property fails, NService will try the keys and ExpiredKeys to decrypt.
+
+
+
