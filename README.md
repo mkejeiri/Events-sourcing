@@ -1918,6 +1918,7 @@ endpointConfiguration.Gateway();
 - although there's only **HTTP** support out of the box, we can **create** our **own channels**.
 
 [More examples...](https://docs.particular.net/samples/gateway/)
+
 [More examples...](https://docs.particular.net/nservicebus/gateway/multi-site-deployments)
 
 
@@ -1948,7 +1949,9 @@ It includes (measure the rate of messages per second):
 - **SLA violation countdown**: acts an early warning system to warn we if the SLA is danger of being breached. It tells we the number of seconds left until the SLA is violated. It is also enabled by default using NServiceBus hosting, but requires explicit activation with self hosting.
 
 [More...](https://docs.particular.net/monitoring/metrics/performance-counters)
+
 [More on usage...](https://docs.particular.net/samples/performance-counters/)
+
 [More on upgrade version...](https://docs.particular.net/nservicebus/upgrades/externalize-perfcounters)
 
 
