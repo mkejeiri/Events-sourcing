@@ -1280,21 +1280,22 @@ await RequestTimeout<ApprovalTimeout>(TimeSpan.FromDays(2, t=> t.SomeState = sta
 To **handle** the **timeout** being sent back to the saga, we implement the **IHandleTimeouts** generic interface.
 
 ```sh
-    public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
+public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
 	//a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
 	//its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
         IAmStartedByMessages<ProcessOrderCommand>,                                                    
         IHandleMessages<IOrderPlannedMessage>,
         IHandleMessages<IOrderDispatchedMessage>
         IHandleTimeouts<ApprovalTimeout>
-    {
+{
 	//...
 	
 	public void Timeout(ApprovalTimeout state, IMessageHandlerContext context) 
 	{
-	//Here we take the action needed when the time is up. In this case, send the approval person a reminder message.		
+		//Here we take the action needed when the time is up. In this case,
+		//send the approval person a reminder message.
 	}
-	}
+}
 ```
 
 ### Advanced Concepts in NServiceBus
