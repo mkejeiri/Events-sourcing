@@ -1964,7 +1964,7 @@ routing.RouteToEndpoint(
   </endpoint>
 </endpoints>
 ```
-[More...](https://docs.particular.net/samples/scaleout/)
+[More Scale Out...](https://docs.particular.net/samples/scaleout/)
 
 
 
@@ -1973,7 +1973,7 @@ routing.RouteToEndpoint(
 **Unit testing of NServiceBus** handlers and sagas is hard without any help from NServiceBus. How do you test what message should come out of ahandler when sending in a command, for example? It wouldn't be possible without touching the **bare metal** of the **transport**. 
 **NServiceBus** helps us with the **NServiceBus.Testing NuGet package**. It makes the unit testing of **handlers and sagas** a **breeze**, and there is no specific testing framework required to make use of it.
 
-[More...] (https://docs.particular.net/samples/unit-testing/)
+[More Unit testing...](https://docs.particular.net/samples/unit-testing/)
 
 
 using eCommerce.Dispatch;
