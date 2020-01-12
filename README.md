@@ -193,7 +193,8 @@ _channel = _connection.CreateModel();
 //tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
 //or be re-created when the server is restarted.
 //Exchanges and queues are Idempotent
-//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
+//Idempotent operation : if the exchange/Queue is already there it won't be created, 
+//otherwise it will get created.
  _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);         
 
 ```
@@ -1194,8 +1195,9 @@ The saga abstract base class also contains the adverse of the originator. The Or
     {
     logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
 
-//When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
-//KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
+//When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate
+//KNOW that the order has been processed => so we use the ReplyToOriginator
+//method of the saga (no routing needed!)
             await ReplyToOriginator(context: context, message: new OrderProcessedMessage()
             {
                 AddressTo = Data.AddressTo,
