@@ -157,7 +157,8 @@ The core API interface and classes are defined in the **RabbitMQ.Client namespac
 
 ```sh
 //Connecting to a message Broker
-ConnectionFactory factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest" };
+ConnectionFactory factory = new ConnectionFactory { 
+			HostName = "localhost", UserName = "guest", Password = "guest" };
 IConnection connection = factory.CreateConnection;
 IModel channel = connection.CreateModel;
 ```
@@ -359,8 +360,10 @@ _channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
 
 //durable: true=> queues are persisted to disk, if the server ever crashes or resets,
 //the queue will be persisted and come back to life.
-_channel.QueueDeclare(CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-_channel.QueueDeclare(PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+_channel.QueueDeclare(CardPaymentQueueName, durable: true, exclusive: false,
+					autoDelete: false, arguments: null);
+_channel.QueueDeclare(PurchaseOrderQueueName, durable: true, exclusive: false, 
+					  autoDelete: false, arguments: null);
 
 //Binding: exchange name, the queue name and the routing key
 //routingKey: determines what queue the message is routed to.
@@ -455,8 +458,9 @@ using (_connection = _factory.CreateConnection())
    //noAck: false => we care that the messages are safe on the queue and we want the message to be acknowledged
    //in case of the consumer crashes, the message is put back into the queue and eventually later
    //dispatched to the next idle worker.
-   //in case of the consumer succeeded, a Ack is sent back to the broker, message (successfully processed) is discarded 
-   //from the queue and worker is ready to process another one.
+   //in case of the consumer succeeded, a Ack is sent back to the broker, message 
+   //(successfully processed) is discarded from the queue and worker 
+   //is ready to process another one.
    channel.BasicConsume(queue: PurchaseOrderQueueName, noAck: false, consumer: consumer);
 
    while (true)
@@ -1187,7 +1191,7 @@ The saga abstract base class also contains the adverse of the originator. The Or
 ```sh
  public async Task Handle(IOrderDispatchedMessage message, IMessageHandlerContext context)
     {
-            logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
+    logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
 
 //When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
 //KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
@@ -1283,9 +1287,10 @@ To **handle** the **timeout** being sent back to the saga, we implement the **IH
     {
 	//...
 	
-		public void Timeout(ApprovalTimeout state, IMessageHandlerContext context) {
-		//Here we take the action needed when the time is up. In this case, send the approval person a reminder message.		
-		}
+	public void Timeout(ApprovalTimeout state, IMessageHandlerContext context) 
+	{
+	//Here we take the action needed when the time is up. In this case, send the approval person a reminder message.		
+	}
 	}
 ```
 
