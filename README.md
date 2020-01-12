@@ -1264,3 +1264,46 @@ To **handle** the **timeout** being sent back to the saga, we implement the **IH
 		}
 	}
 ```
+
+### Advanced Concepts in NServiceBus
+
+#### Distributed Transactions
+
+**NServiceBus** follows a certain path to process a message. We will focus on **start transaction** and **commit transaction**.
+
+A **transaction** makes sure that everything in **message handler** either **succeeds as a whole** or **fails as a whole** if an exception occurs in the handler (* i.e. default behavior, it can't be switched off*).
+
+![pic](src/eCommerce/images/figure11.jpg) 
+
+
+In Happy Path the transaction gets committed in the end. i.e. the record in a database gets committed, and the outcome command message sent via the bus is actually sent.
+When an exception is thrown in the handler, everything done in the handler (before the exception occurred) gets rolled back, after which NServiceBus' "retry mechanism" kicks in. 
+
+![pic](src/eCommerce/images/figure11.jpg) 
+
+
+To answer the question *how NServiceBus knows that when we inserted the record we need to do a rollback?*. We elaborate on two mechanisms than NServiceBus relies on :
+
+- **DTC**:
+
+**NServiceBus** knows that when we inserted a record, for instance a *SQL Server has to be contacted to commit a rollback* using the DTC (Distributed Transaction Coordinator), which natively presents in Windows OS and used by default with the MSMQ transport (*often not correctly configured, and that's why the "NServiceBus platform installer" automatically configures it in the right way*).
+
+
+*We don't need to know about the DTC to work with it, because NServiceBus takes care of this for us behind the scenes. Internally the DTC works with pre-registered resource managers, that know about the resources participating in a distributed transaction, e.g. For each distributor transaction, a number of resource managers are in play. There is a resource manager responsible for the inserting of the SQL record, and there's a resource manager sending an MSMQ message. If it's time to commit, the DTC will ask all resource managers if everything went ok and ready. Only when all resource managers give the green light, it will tell all of them to commit. If not, the DTC will give the rollback command to all resource managers eventually.* 
+
+
+- **Outbox for Transport not supporting DTC** :
+
+**NServiceBus** has the **Outbox** feature which is not tied to any particular **transports** or **OS** (transports run on). The end result of **Outbox** is the same as **DTC**, but **Outbox** achieves the result in a different way. It uses **Deduplication** of the **incoming messages** in the **handler**. 
+
+**Outbox** needs a **data storage** with a **history of messages**. This **database**/"**data storage**" must be the same database as the **business data resides in**, because only then both business **data manipulation** and updating **message history** can be executed as **one transaction**. The **deduplication** records are kept for a default of *7 days*, and the **purging** process runs every minute (*all are configurable*). **Outbox** is enabled by default for the **RabbitMQ transport**. For all other transports, we have explicitly to enable it. 
+
+
+Once **Outbox is enabled**, when a **message** comes in, **Outbox** checks in the **data store** if this **message** was already **processed**; if not, the **handler logic is executed**. During that phase, other messages are likely processed by the **handler** and **ready to be sent**, those **messages** instead of **sending** them *immediately* are placed in the **data store**, this occurs in the **same transaction** as the **database interaction logic** in **the handler**.
+
+The **messages** in the **data store** are **called** the **outbox** of the **handler**. When the **handler** is **done** with everything else, **NServiceBus** will **send** the messages in the **outbox** (*handler's data store*). 
+
+For the **incoming message**. If **NServiceBus** detected (using the **outbox**) that the message was already **received** by the **handler**, the **handler logic** will be **skipped**, and if needed, **Outbox** will send **messages** that have **not** been **sent yet**.
+
+
+
