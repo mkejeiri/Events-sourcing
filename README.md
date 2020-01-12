@@ -1432,5 +1432,57 @@ We use a wrapper around the type of the property that has to use **Databus** and
 	}
 ```
 
+
 **Unobtrusive Mode**
 
+To be able to use a **message** in **NServiceBus** we must implement **interfaces** such as *IMessage, ICommand, and IEvent* which all reside inside the **NServiceBus core assembly**. There are some drawbacks to that approach : 
+
+- We need to have **reference** to that assembly.
+- A **new version** of **NServiceBus**, the **assembly** has to be kept **up to date**. 
+- We won't be able to use a pure **POCO** from  our *domain knowledge*.
+
+**NServiceBus** allow us to define **conventions** in a **configuration** of the **endpoint**, e.g. we could tell **NServiceBus** that every class with a name that **ends** with **Command** and resides in a certain **namespace** is a command (i.e. no need to implement ICommand). 
+
+In the same way, we could also specify which **messages** use **TimeToBeReceived** without using the **attribute**. The **convention feature** also operates at **property level** for **DataBus** without the **DataBus property wrapper** (e.g. **configure** it to use **DataBus** for every **property** which has a name that **ends** with **DataBus**), and **encryption** without a **WiredEncryptedString** type. 
+
+```sh
+	var conventions = endpointConfiguration.Conventions();
+	conventions.DefiningCommandsAs(
+		type =>
+		{
+		//defining all classes with a name that ends with Commands 
+		//and is in a namespace called MyNamespace
+			return type.Namespace == "MyNamespace.Messages.Commands";
+		});
+	conventions.DefiningEventsAs(
+		type =>
+		{
+			return type.Namespace == "MyNamespace.Messages.Events";
+		});
+	conventions.DefiningMessagesAs(
+		type =>
+		{
+			return type.Namespace == "MyNamespace.Messages";
+		});
+	conventions.DefiningDataBusPropertiesAs(
+		property =>
+		{
+			return property.Name.EndsWith("DataBus");
+		});
+	conventions.DefiningExpressMessagesAs(
+		type =>
+		{
+			return type.Name.EndsWith("Express");
+		});
+	conventions.DefiningTimeToBeReceivedAs(
+		type =>
+		{
+			if (type.Name.EndsWith("Expires"))
+			{
+				//specifying a time span of 30 seconds for messages that endwith the word Expires. 
+				//All other messages will have a time span of basically forever
+				return TimeSpan.FromSeconds(30);
+			}
+			return TimeSpan.MaxValue;
+		});
+```
