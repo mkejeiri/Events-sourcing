@@ -193,14 +193,14 @@ _channel = _connection.CreateModel();
 //tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
 //or be re-created when the server is restarted.
 //Exchanges and queues are Idempotent
-//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.                     
+//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
  _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);         
 
 ```
 
 ```sh
 //Send message  
-//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
+//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation
  channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
 ```
 
@@ -237,9 +237,9 @@ _channel = _connection.CreateModel();
 
 ```sh
 //Send message  
-//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation            
+//payment.Serialize(): converts payment message instances into a compressed bytes[] to a json representation
  channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: payment.Serialize());
-```
+ ```
 
  **[Consumer](src/RabbitMq/Examples/WorkerQueue_Consumer/Program.cs)**
 ```sh
@@ -821,7 +821,8 @@ There are 2 choices for routing :
 	 <!--Option 2-->
      <!--<add Assembly="eCommerce.Messages" Namespace="eCommerce.Messages" Endpoint="eCommerce.Order"/>-->
 	 <!--Option 3-->	 
-     <add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand" Endpoint="eCommerce.Order"/>
+     <add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand" 
+		  Endpoint="eCommerce.Order"/>
     </MessageEndpointMappings>
   </UnicastBusConfig>
   <AuditConfig QueueName="audit"/>
