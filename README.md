@@ -1405,3 +1405,28 @@ public class ProvideConfiguration :
 
 
 
+** DataBus: Supporting Large Messages**
+We might come across the need to **handle large messages** with some transports, there is a maximum allowed message size( max 4 MB for MSMQ). Further, handling large messages might be a bad idea because of potential **performance** problems and **resource consumption**. 
+
+**Properties large** in size can be **stored** in a location that is accessible by both the **sender** and the **receiver** of the **message**. The contents of the large property is stored at that location, and the message travels with a **pointer** to the **data location** instead of the **data itself**. 
+
+We use a wrapper around the type of the property that has the user **Databus** and **activate DataBus** in the **configuration** by using the **UseDataBus** method on the **configuration** object and  As a generic parameter, we have to specify a **Databus type**.
+
+
+
+**Out of the box DataBuses are** : 
+
+- **FileShareDataBus** that needs a path to a share.
+- **AzureDataBus** using **Azure Blob Storage** :  NuGet package for the Azure transport.
+- Create our **own DataBus** by implementing **IDataBus** and registering it with **NServiceBus**.
+
+```sh
+	//TimeToBeReceived: The FileShareDataBus doesn't throw away the data in 
+	//the DataBus automatically,because it has no way of knowing when the 
+	//message has been received by all endpoints consuming the message.
+	[TimeToBeReceived("00:05:00")] //Discared after 5 min
+	public class TheMessageWithLargePayload:IMessage {
+		public string MyProperty {get; set;}
+		public DataBusProperty<bytes[]> largeData {get; set;}	 
+	}
+```
