@@ -1411,7 +1411,7 @@ We might come across the need to **handle large messages** with some transports,
 
 **Properties large** in size can be **stored** in a location that is accessible by both the **sender** and the **receiver** of the **message**. The contents of the large property is stored at that location, and the message travels with a **pointer** to the **data location** instead of the **data itself**. 
 
-We use a wrapper around the type of the property that has the user **Databus** and **activate DataBus** in the **configuration** by using the **UseDataBus** method on the **configuration** object and  As a generic parameter, we have to specify a **Databus type**.
+We use a wrapper around the type of the property that has to use **Databus** and **activate DataBus** in the **configuration** by using the **UseDataBus** method on the **configuration** object and  As a generic parameter, we have to specify a **Databus type**.
 
 
 
@@ -1434,18 +1434,3 @@ We use a wrapper around the type of the property that has the user **Databus** a
 
 **Unobtrusive Mode**
 
-
-So far you've seen that every message in NServiceBus must implement an interface. You've watched me use IMessage, ICommand, and IEvent. These interfaces all reside inside the NServiceBus core assembly. Thatmeans every assembly that uses messages must have a reference to that assembly. And when a new version of
-NServiceBus comes out, the assembly has to be kept up to date. It also prevents you from using Plain Old C#
-classes, because you always have to implement the interface. But with NServiceBus, you can also
-defineconventions in a configuration of your endpoint. You could, for example, tell NServiceBus that every class with
-a name that ends with command and resides in a certain namespace is a command, and in that way you don't need
-ICommand. In the same way, you can also specify which messages use TimeToBeReceived without using the
-attribute. The convention feature also operates at property level for DataBus without the DataBus property wrapper,
-and encryption without a WiredEncryptedString type. You could, for example, configure it to use DataBus for every
-property which has a name that ends with DataBus. Here's how it's done. First call conventions on
-the endpointConfiguration object for a Conventions object, and call methods on it, which have a name that starts
-with Defining. Here I'm defining all classes with a name that ends with commands and is in a namespace called
-MyNamespace. In the same way, you can give messages that endwith the word Expires a
-TimeToBeRecieved, specifying a time span of 30 seconds here. All other messages will have a time span of
-basically forever in this example.
