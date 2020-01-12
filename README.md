@@ -1512,8 +1512,8 @@ In the same way, we could also specify which **messages** use **TimeToBeReceived
 		{
 			if (type.Name.EndsWith("Expires"))
 			{
-				//specifying a time span of 30 seconds for messages that endwith the word Expires. 
-				//All other messages will have a time span of basically forever
+			//specifying a time span of 30 seconds for messages that endwith the word Expires.
+			//All other messages will have a time span of basically forever.
 				return TimeSpan.FromSeconds(30);
 			}
 			return TimeSpan.MaxValue;
