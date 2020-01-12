@@ -188,14 +188,14 @@ string QueueName = "StandardQueue";
 
 _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", Password = "guest"};
 _connection = _factory.CreateConnection();
-_channel = _connection.CreateModel(); 
+_channel = _connection.CreateModel();
 
 //tells the broker the queue is durable. i.e. that queue is persisted to disk and will survive,
 //or be re-created when the server is restarted.
 //Exchanges and queues are Idempotent
-//Idempotent operation : if the exchange/Queue is already there it won't be created, 
+//Idempotent operation : if the exchange/Queue is already there it won't be created,
 //otherwise it will get created.
- _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);         
+ _channel.QueueDeclare(queue:QueueName, durable:true, exclusive:false, autoDelete:false, arguments:null);
 
 ```
 
