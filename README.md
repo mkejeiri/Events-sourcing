@@ -1279,7 +1279,7 @@ A **transaction** makes sure that everything in **message handler** either **suc
 In Happy Path the transaction gets committed in the end. i.e. the record in a database gets committed, and the outcome command message sent via the bus is actually sent.
 When an exception is thrown in the handler, everything done in the handler (before the exception occurred) gets rolled back, after which NServiceBus' "retry mechanism" kicks in. 
 
-![pic](src/eCommerce/images/figure11.jpg) 
+![pic](src/eCommerce/images/figure12.jpg) 
 
 
 To answer the question *how NServiceBus knows that when we inserted the record we need to do a rollback?*. We elaborate on two mechanisms than NServiceBus relies on :
@@ -1295,6 +1295,7 @@ To answer the question *how NServiceBus knows that when we inserted the record w
 - **Outbox for Transport not supporting DTC** :
 
 **NServiceBus** has the **Outbox** feature which is not tied to any particular **transports** or **OS** (transports run on). The end result of **Outbox** is the same as **DTC**, but **Outbox** achieves the result in a different way. It uses **Deduplication** of the **incoming messages** in the **handler**. 
+![pic](src/eCommerce/images/figure12.jpg) 
 
 **Outbox** needs a **data storage** with a **history of messages**. This **database**/"**data storage**" must be the same database as the **business data resides in**, because only then both business **data manipulation** and updating **message history** can be executed as **one transaction**. The **deduplication** records are kept for a default of *7 days*, and the **purging** process runs every minute (*all are configurable*). **Outbox** is enabled by default for the **RabbitMQ transport**. For all other transports, we have explicitly to enable it. 
 
