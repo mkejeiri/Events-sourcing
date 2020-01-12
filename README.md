@@ -1307,4 +1307,55 @@ The **messages** in the **data store** are **called** the **outbox** of the **ha
 For the **incoming message**. If **NServiceBus** detected (using the **outbox**) that the message was already **received** by the **handler**, the **handler logic** will be **skipped**, and if needed, **Outbox** will send **messages** that have **not** been **sent yet**.
 
 
+**Message expiration**
+When a message isn't handled within a timeframe, it is no longer relevant, e.g. message containing traffic jams after the road situation has changed, and likely another message has been generated replacing the old one. Or maybe there are lots of messages flying around in the system, and we don't want them in the way after a certain timeframe.
+
+We can control the lifespan of unhandled messages with the TimeToBeReceived attribute. When the message isn't processed within the given timeframe, it will be deleted by the transport. 
+
+```sh
+[TimeToBeReceived("00:05:00")] //Discared after 5 min
+public class TheMessage:IMessage{}
+```
+> Messages in the error and audit queue are considered handled, so these messages will not be deleted.
+
+
+**Handler Order**
+
+When a service contains multiple handlers for the same message, they are not executed in a particular order by default, but we can specify an order using the configuration object. For the handlers that we don't specify in the sequence, we still don't know when they are going to run. It could run before or after the sequence. 
+
+```sh
+endpointConfiguration.ExecuteTheseHandlersFirst(
+		typeof(HandlerB),typeof(HandlerA),typeof(HandlerC));
+```
+
+
+**Stopping, Deferring, and Forwarding Messages**
+
+To **stop a message** from being processed further by the **current handler** and all **handlers that come after** :
+
+```sh
+	//context object that's passed into the handle methods
+	context.DoNotContinueDispatchingCurrentMessageToHandlers();
+```
+
+The message is still treated as **successfully processed**, and a **transaction** is **committed**, meaning that, for example, all **database changes** we've done this far are **committed** as well. 
+
+
+To **handle a message later**, we can use :
+
+```sh
+	//sendOptions object that we specify when sending a message
+	sendOptions.DoNotDeliverBefore(TimeSpan delay);
+	sendOptions.DoNotDeliverBefore(DateTime time);
+```
+
+**NServiceBus' Timeout Manager** handles this, which should put the **message back** in the **queue** when it's time. In both cases, the **handler transaction is committed**. 
+
+
+We can also **forward a message** to **another queue** : 
+```sh
+	endpointConfiguration
+			.ForwardCurrentMessageTo(string destination);
+```
+This will not stop the **current handler** from **executing further**.
 
