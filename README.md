@@ -1486,3 +1486,187 @@ In the same way, we could also specify which **messages** use **TimeToBeReceived
 			return TimeSpan.MaxValue;
 		});
 ```
+
+
+**Auditing Messages**
+
+**Microservices** are harder to debug because of their **asynchronous nature**. It would be better to configure an **audit queue** on the **endpoints**. This will send a copy of all messages processed by that endpoint to a **separate queue**. It is also recommended that this **queue** is on **another central machine**, so the different endpoints can have the **same audit queue**. An audit queue is also a requirement for the particular platform tools we can use to monitor your messages.
+
+We can configure auditing using the **IProvideConfiguration** interface or by using the **Configuration** object. If we use **MSMQ** as a transport, we can specify the queue on another system by using the **@** symbol, followed by the **machine name**. There's also an option to override the **TimeToBeReceived setting** that could be already on the message.
+
+```sh
+	endpointConfiguration.AuditProcessedMessagesTo("audit");
+```
+
+
+**Scheduling Messages**
+
+In **sagas**, there is a **timeout functionality**, but if we only want to **execute a task every 5 minutes** we could do it **outside** the **saga** using the Schedule object, which can be injected in our handler class. The task we specified is stored in an **in-memory dictionary** together with a **unique ID**. It's **in memory**, so the schedule entry **won't survive an endpoint restart**. 
+
+Therefore, a message is sent to the **TimeoutManager**, when the **time is up**, the **message is sent back** to the **endpoint**, and the task is **looked up** in a **dictionary** and executed. If the schedule entry be **not present** in the dictionary **anymore**, the **message** is **ignored**, but the **log entry** is **made**. 
+
+```sh
+// To send a message every 5 minutes
+await endpointInstance.ScheduleEvery(
+        timeSpan: TimeSpan.FromMinutes(5),
+        task: pipelineContext =>
+        {
+            // use the pipelineContext parameter to send messages
+            var message = new CallLegacySystem();
+            return pipelineContext.Send(message);
+        })
+    .ConfigureAwait(false);
+
+//Name a schedule task and invoke it every 5 minutes
+await endpointInstance.ScheduleEvery(
+        timeSpan: TimeSpan.FromMinutes(5),
+        name: "MyCustomTask",
+        task: pipelineContext =>
+        {
+            log.Info("Custom Task executed");
+            return Task.CompletedTask;
+        })
+    .ConfigureAwait(false);
+```
+
+
+**Polymorphic Message Dispatch**
+
+Let's say we've created  a serviceV1 using the IOrderPlannedEvent. It turns out that the timestamp indicating when the order was placed exactly is necessary. So we create serviceV2 using an interface that is derived from IOrderPlannedEvent with the extra property added.
+
+```sh
+namespace V1.Messages
+{
+    public interface IOrderPlannedEvent :
+        IEvent
+    {
+        int SomeData { get; set; }
+    }
+}
+```
+
+```sh
+namespace V2.Messages
+{
+    public interface IOrderPlannedEvent :
+        V1.Messages.IOrderPlannedEvent
+    {
+        DateTime PlacedAt { get; set; }
+    }
+}
+```
+
+This fits the polymorphic message dispatch feature in NServiceBus. we could just publish the new IOrderPlannedEvent as normal in the publishing service. All other services using the old interface in the handler will receive the event as well. Using microservice architecture, we probably have a number of services running that handle the old version of IOrderPlannedEvent, but we don't want to update all handlers in all services with a new version at once. So initially we just update the publish service, and all other services will continue to get the event in their handler with the old version. Therefore we can update the services gradually or only when needed. 
+
+
+Another feature is **polymorphic event handling**. Let's assume that for VIP customers we have to create an **IOrderPlannedVipEvent** deriving from **IOrderPlannedEvent**. For non-VIP users, you could then publish *IOrderPlannedEvent*, which will only trigger handlers for the specific event, and for VIP users, publish the derive one, which will trigger handlers handling **IOrderPlannedVipEvent** and **IOrderPlannedEvent**. So the handlers with **IOrderPlannedEvent** could run the logic needed for every user, and the **IOrderVipEvent** handlers could run the **extra logic** needed for **VIPs**. 
+
+```sh
+ public Task Handle(IOrderPlannedEvent event, IMessageHandlerContext context)
+    {
+        //Run business logic for normal customers
+    }	
+```
+	
+```sh
+ public Task Handle(IOrderPlannedVipEvent event, IMessageHandlerContext context)
+    {
+        //Run business logic for VIP customers
+    }
+```
+
+> Note that interfaces support multiple inheritance. If we inherit event interface from multiple other event interfaces that have handlers, we can enable even more interesting features and scenarios. 
+
+
+
+**The Message Pipeline**
+
+**NServiceBus message pipeline** is a series of steps NServiceBus executes when a message comes in or a message goes out. A **step** has **pipeline awareness**, it knows where to fit in the pipeline and when to execute. A step always contains **behavior** that is **executed** when it's the **steps turn**. 
+
+For **incoming message pipeline**, the first step is executed. The **behavior** class contained in this step has an **Invoke method**. The two **parameters of the Invoke method **are context, used to **communicate** with other **behaviors**, and an action delegate called **next**. When **next** is called, the **behavior of the next step** is triggered. So one behavior can do something before or after the underlying steps with behaviors are executed. When the last step in the line calls next, NServiceBus walks back in the stack to execute all the logic that comes after the call to next. 
+
+```sh
+public class SampleBehavior :
+    Behavior<IIncomingLogicalMessageContext>
+{
+    public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+    {
+        // custom logic before calling the next step in the pipeline.
+
+        await next().ConfigureAwait(false);
+
+        // custom logic after all inner steps in the pipeline completed.
+    }
+}
+```
+
+The **default NServiceBus pipeline** consists of a number of steps, and there's a different pipeline for incoming and outgoing messages. 
+
+We cherry picked a few :
+
+- **Incoming** : **DeserializeMessages**, **MutateIncomingMessages**, **InvokeHandlers**.
+- **Outgoing** : **SerializeMessage**, **MutateOutgoingMessages**, **DispatchMessageToTransport**.
+
+There's a step that **serializes** and **deserializes** **messages**, one that takes care of executing the registered **mutators** for incoming and outgoing messages, and the registered **unit of work** object. There's a step that takescare of **invoking the handlers** in the incoming messages pipeline, and the **DispatchMessageToTransport** to take care of delivering a message to the transport in the outgoing message pipeline.
+
+
+**Implementing Custom Behaviors**
+
+The **pipeline** can **be changed**. We can **insert new steps** with **behaviors** in the existing **pipeline** or **replace steps**. 
+First of all, to make a **new behavior** we can **create a class** that derives from **behavior**. **Behavior** is generic, and we have to specify if this behavior is for the **incoming** or **outgoing** **pipeline** by using the **right** (e.g. *IIncomingLogicalMessageContext*) interface. 
+
+```sh
+public class SampleBehavior :
+    Behavior<IIncomingLogicalMessageContext>
+{
+    public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
+    {        
+		using(vardataContext= new DataContext())
+		{
+		context.Extensions.Set(dataContext);
+		return next();
+		}        
+    }
+}
+```
+Next, we implement the **Invoke method**, which has a chosen **context objec**t and a **func of task** called **'next'** as **parameters**. **Behaviors** are great if we want to create a **disposable** object such as **data context** and **dispose** it after all other **behaviors** down the **pipeline** are done with it. 
+
+
+
+To let the other behaviors access the **data context**, we put it in the context by calling the set method on the **Extensions** object. Other **behaviors** can pull it out using the **get method**. 
+
+
+```sh
+	//Creating a New Step
+	endpointConfiguration.Pipeline.Register(new SampleBehavior(), "A sample pipeline step");
+```
+ 
+
+Next register the step in the pipeline. We just have to use the **endpointConfiguration** object for that, calling Register on the pipeline object, by specifying an instance of the **behavior** and a **description**. 
+
+```sh
+	public class Registration: RegisterStep
+	{ 
+		public Registration() : base( 
+								"id", 
+								typeof(SampleBehavior),
+								"A sample pipeline step") { } 
+	}
+```
+Or derive a class from **RegisterStep**, and pass an **ID**, the **typeof** the **behavior**, and a description to the base constructor. 
+
+A class deriving from **RegisterStep** will automatically be **picked up** by **NServiceBus** when the **endpoint is created**, because of its **assembly scanning capability**. If we don't want a **new step**, but we want to **replace** an **existing one**, we just have to **create a new behavior**, and then replace using the **Replace method** on the **pipeline** object. 
+
+```sh
+	//Replacing the Behavior of a Step
+	endpointConfiguration.Pipeline.Replace("existing step id", typeof(SampleBehavior), "Description");
+```
+This time we have to tell it what the **ID** is of the **step** we want to **replace**.
+
+
+
+
+
+
+
+
