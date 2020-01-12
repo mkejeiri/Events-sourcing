@@ -1968,6 +1968,7 @@ We will focus on **Scaling out** which is placing the same service on multiple m
 - MSMQ, queues are on the machines the services run on, (i.e. just placing another instance of the service on multiple machines won't work). The sender-side distribution feature helps out. We put multiple instances on the server on different machines. These instances are called workers. Then there are two parts of configuration to do. 
 
 1- Map a specific message to a logical endpoint, which is like a virtual endpoint.
+
 2- Map the logical endpoints to multiple physical machines.
 
 > The sending service will just loop through the list of configured machines to determine the destination of the message. There's no feedback on the availability of workers, so when one worker is down, messages for that worker will just pile up into its queue.
