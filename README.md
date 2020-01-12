@@ -164,7 +164,8 @@ IModel channel = connection.CreateModel;
 
 ```sh
 //Exchanges and queues are Idempotent
-//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
+//Idempotent operation : if the exchange/Queue is already there 
+//it won't be created, otherwise it will get created.
 var ExchangeName = channel.ExchangeDeclare ("MyExchange", "direct");
 channel.QueueDeclare("MyQueue");
 channel.QueueBind("MyQueue", ExchangeName ,"");
@@ -261,7 +262,8 @@ while (true)
     //This tells the message broker that we are finished processing the message,
     //and we are ready to start processing the next message when it is ready.
 	//the next message will not be received by this consumer, until it sends this delivery acknowledgement. 
-	//acknowledgement sent to the RabbitMQ server, meaning we've finished with that message, and it can discard it from the queue
+	//acknowledgement sent to the RabbitMQ server, meaning we've finished with that message, 
+	//and it can discard it from the queue
 	channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 }
 
@@ -286,10 +288,12 @@ _factory = new ConnectionFactory { HostName = "localhost", UserName = "guest", P
 _connection = _factory.CreateConnection();
 _channel = _connection.CreateModel();
 
-//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
+//Idempotent operation : if the exchange/Queue is already there 
+//it won't be created, otherwise it will get created.
 _channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout", durable: false);
 
-//We are publishing directly to an and exchange any queues that have been bound to that exchange will receive the message
+//We are publishing directly to an and exchange any queues 
+//that have been bound to that exchange will receive the message
 //No need for routingKey Vs Default exchange (which bears the name of the queue!) 
 _channel.BasicPublish(exchange: ExchangeName, routingKey: "", basicProperties: null, body: message.Serialize());
 ```
@@ -301,7 +305,8 @@ using (_connection = _factory.CreateConnection())
 {
     using (var channel = _connection.CreateModel())
   {
-	//Idempotent operation : if the exchange/Queue is already there it won't be created, otherwise it will get created.
+	//Idempotent operation : if the exchange/Queue is already there 
+	//it won't be created, otherwise it will get created.
 	channel.ExchangeDeclare(exchange: ExchangeName, type: "fanout");
 
 	//this uses a system generated queue name such as amq.gen-qVC1KT9w-plxzpV9MVId9w
@@ -315,7 +320,8 @@ using (_connection = _factory.CreateConnection())
 	//It will receive all messages that are sent to the exchange ("PublishSubscribe_Exchange")
 	//noAck: true =>  No waiting for a message acknowledgement before receiving the next message.
 	//We don't need to as our subscriber application is reading from its own queue 
-	//it takes msg as it can deal with, no work split no load balancing each subscriber will receive the same msg copies
+	//it takes msg as it can deal with, no work split no load balancing each
+	//subscriber will receive the same msg copies
      channel.BasicConsume(queue: queueName, noAck: true, consumer: _consumer);
     
 	while (true)
@@ -379,11 +385,14 @@ using (_connection = _factory.CreateConnection())
         //Queue binding to exchange and listen to CardPayment messages
 		//Queues an exchanges are idempotent
 		channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
-        channel.QueueDeclare(queue: CardPaymentQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-        channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName, routingKey: "CardPayment");
+        channel.QueueDeclare(queue: CardPaymentQueueName, durable: true, 
+							exclusive: false, autoDelete: false, arguments: null);
+        channel.QueueBind(queue: CardPaymentQueueName, exchange: ExchangeName, 
+						  routingKey: "CardPayment");
 		
 		//tells RabbitMQ to give one message at time per worker,
-		//i.e.  don't dispatch any message to a worker until it has processed and acknowledged the previous one.
+		//i.e. don't dispatch any message to a worker until it 
+		//has processed and acknowledged the previous one.
 		//otherwise it will dispatch it to the next worker that is not busy
         channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 		
@@ -392,10 +401,13 @@ using (_connection = _factory.CreateConnection())
         var consumer = new QueueingBasicConsumer(channel);
 		
 		//and basic consumer is called to start reading from the queue
-		//noAck: false => we care that the messages are safe on the queue and we want the message to be acknowledged
-		//in case of the consumer crashes, the message is put back into the queue and eventually later
+		//noAck: false => we care that the messages are safe 
+		//on the queue and we want the message to be acknowledged
+		//in case of the consumer crashes, the message is put 
+		//back into the queue and eventually later
 		//dispatched to the next idle worker.
-		//in case of the consumer succeeds Ack is sent back to the broker, message (successfully processed) is discarded 
+		//in case of the consumer succeeds Ack is sent back to the broker, 
+		//message (successfully processed) is discarded 
 		//from the queue and worker is ready to process another one.
         channel.BasicConsume(queue: CardPaymentQueueName, noAck: false, consumer: consumer);
 
@@ -425,8 +437,10 @@ using (_connection = _factory.CreateConnection())
    //Queue binding to exchange and listen to PurchaseOrder messages
    //Queues an exchanges are idempotent
    channel.ExchangeDeclare(exchange: ExchangeName, type: "direct");
-   channel.QueueDeclare(queue: PurchaseOrderQueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-   channel.QueueBind(queue: PurchaseOrderQueueName, exchange: ExchangeName, routingKey: "PurchaseOrder");
+   channel.QueueDeclare(queue: PurchaseOrderQueueName, durable: true, exclusive: false,
+						autoDelete: false, arguments: null);
+   channel.QueueBind(queue: PurchaseOrderQueueName, exchange: ExchangeName, 
+					routingKey: "PurchaseOrder");
 
    //tells RabbitMQ to give one message at time per worker,
    //i.e.  don't dispatch any message to a worker until it has processed and acknowledged the previous one.
@@ -790,7 +804,8 @@ There are 2 choices for routing :
 ```sh
 <configuration>
   <configSections>
-    <section name="MessageForwardingInCaseOfFaultConfig" type="NServiceBus.Config.MessageForwardingInCaseOfFaultConfig, NServiceBus.Core"/>
+    <section name="MessageForwardingInCaseOfFaultConfig" 
+			type="NServiceBus.Config.MessageForwardingInCaseOfFaultConfig, NServiceBus.Core"/>
     <section name="UnicastBusConfig" type="NServiceBus.Config.UnicastBusConfig, NServiceBus.Core"/>
     <section name="AuditConfig" type="NServiceBus.Config.AuditConfig, NServiceBus.Core"/>
   </configSections> 
@@ -820,7 +835,8 @@ There are 2 choices for routing :
 var transport = endpointConfiguration.UseTransport<MyTransport>();
 var routing = transport.Routing();
 
-//Option 1 : route all messages in the assembly were the ProcessOrderCommand 'classes' in are routed to the "eCommerce.Order" endpoint
+//Option 1 : route all messages in the assembly were the ProcessOrderCommand 'classes'
+//in are routed to the "eCommerce.Order" endpoint
 //XML :  <add Assembly="eCommerce.Messages" Endpoint="eCommerce.Order"/>
 routing.RouteToEndpoint(
     assembly: typeof(eCommerce.Messages.ProcessOrderCommand).Assembly,
@@ -834,7 +850,8 @@ routing.RouteToEndpoint(
     destination: "eCommerce.Order");
 
 //Option 3: limit routing for one messageType "ProcessOrderCommand"
-//XML : <add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand" Endpoint="eCommerce.Order"/>
+//XML:<add Assembly="eCommerce.Messages" Type="eCommerce.Messages.ProcessOrderCommand"
+// Endpoint="eCommerce.Order"/>
 routing.RouteToEndpoint(
     messageType: typeof(eCommerce.Messages.ProcessOrderCommand),
     destination: "eCommerce.Order");
@@ -1099,8 +1116,11 @@ To define a **saga** we use the **Saga** base class contained in the NServiceBus
 [ProcessOrderSaga.cs](src/eCommerce/eCommerce.Saga/ProcessOrderSaga.cs)
 ```sh
     public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
-        IAmStartedByMessages<ProcessOrderCommand>, //a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
-                                                   //its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+	//a new Saga is started when ProcessOrderCommand message 
+	//arrives from originator (RestApi/WebMVC Client),
+	//its implementation below : i.e. Handle(ProcessOrderCommand message, 
+	//IMessageHandlerContext context)
+        IAmStartedByMessages<ProcessOrderCommand>,                                                    
         IHandleMessages<IOrderPlannedMessage>,
         IHandleMessages<IOrderDispatchedMessage>
     {
@@ -1122,11 +1142,14 @@ An abstract method **ConfigureHowToFindSaga** in a saga class tells NServiceBus 
 
 **ConfigureHowToFindSaga**
 ```sh
-//configure how NService bus find the saga data storage using mapping between received command (ProcessOrderCommand) and ProcessOrderSagaData storage
+//configure how NService bus find the saga data storage using mapping between received command 
+//(ProcessOrderCommand) and ProcessOrderSagaData storage
         protected override void ConfigureHowToFindSaga(SagaPropertyMapper<ProcessOrderSagaData> mapper)
         {
-            //Select s.OrderId from ProcessOrderSagaData s where s.OrderId = message.OrderId (i.e. ProcessOrderCommand.OrderId )
-            //Read the OrderId property from ProcessOrderCommand and matched with OrderId property from the saga data store
+            //Select s.OrderId from ProcessOrderSagaData s where s.OrderId = message.OrderId 
+			//(i.e. ProcessOrderCommand.OrderId )
+			//Read the OrderId property from ProcessOrderCommand 
+			//and matched with OrderId property from the saga data store
             mapper.ConfigureMapping<ProcessOrderCommand>(
                     msg => msg.OrderId //ProcessOrderCommand part
                 )
@@ -1163,11 +1186,11 @@ The saga abstract base class also contains the adverse of the originator. The Or
 
 ```sh
  public async Task Handle(IOrderDispatchedMessage message, IMessageHandlerContext context)
-        {
+    {
             logger.Info(message: $"Order {Data.OrderId} has been dispatched. Notifying originator and ending Saga...");
 
-            //When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
-            //KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
+//When the IOrderDispatchedMessage comes back, we want to let the APPLICATION that causes saga to instantiate 
+//KNOW that the order has been processed => so we use the ReplyToOriginator method of the saga (no routing needed!)
             await ReplyToOriginator(context: context, message: new OrderProcessedMessage()
             {
                 AddressTo = Data.AddressTo,
@@ -1182,7 +1205,7 @@ The saga abstract base class also contains the adverse of the originator. The Or
             //tell the saga it's done with the MarkAscomplete method
             //The saga will throw away the data object in the configured storage
             MarkAsComplete();
-        }
+    }
 ```
 
 
@@ -1251,8 +1274,9 @@ To **handle** the **timeout** being sent back to the saga, we implement the **IH
 
 ```sh
     public class ProcessOrderSaga : Saga<ProcessOrderSagaData>,
-        IAmStartedByMessages<ProcessOrderCommand>, //a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
-                                                   //its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+	//a new Saga is started when ProcessOrderCommand message arrives from originator (RestApi/WebMVC Client),
+	//its implementation below : i.e. Handle(ProcessOrderCommand message, IMessageHandlerContext context)
+        IAmStartedByMessages<ProcessOrderCommand>,                                                    
         IHandleMessages<IOrderPlannedMessage>,
         IHandleMessages<IOrderDispatchedMessage>
         IHandleTimeouts<ApprovalTimeout>
@@ -1390,7 +1414,7 @@ public class ProvideConfiguration :
                     KeyFormat = KeyFormat.Base64
                 },
 				
-				//If decryption of the property fails, NService will try the keys and ExpiredKeys to decrypt.
+		//If decryption of the property fails, NService will try the keys and ExpiredKeys to decrypt.
                 new RijndaelExpiredKey
                 {
                     Key = "cdDbqRpQdRbTs3mhdZh9qCaDaxJXl+e6"
