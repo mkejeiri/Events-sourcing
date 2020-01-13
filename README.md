@@ -1341,20 +1341,21 @@ For the **incoming message**. If **NServiceBus** detected (using the **outbox**)
 
 
 **Message expiration**
-When a message isn't handled within a timeframe, it is no longer relevant, e.g. message containing traffic jams after the road situation has changed, and likely another message has been generated replacing the old one. Or maybe there are lots of messages flying around in the system, and we don't want them in the way after a certain timeframe.
 
-We can control the lifespan of unhandled messages with the TimeToBeReceived attribute. When the message isn't processed within the given timeframe, it will be deleted by the transport. 
+When a message isn't handled within a **timeframe**, it is no longer **relevant**, e.g. message containing traffic jams after the road **situation** has **changed**, and likely another message has been generated replacing the old one. Or maybe there are lots of **messages flying around** in the system, and we don't want them in the way after a certain **timeframe**.
+
+We can **control the lifespan** of **unhandled messages** with the **TimeToBeReceived** attribute. When the message isn't processed within the **given timeframe**, it will be **deleted by the transport**. 
 
 ```sh
 [TimeToBeReceived("00:05:00")] //Discared after 5 min
 public class TheMessage:IMessage{}
 ```
-> Messages in the error and audit queue are considered handled, so these messages will not be deleted.
+> Messages in the error and **audit queue** are considered handled, so these messages will not be **deleted**.
 
 
 **Handler Order**
 
-When a service contains multiple handlers for the same message, they are not executed in a particular order by default, but we can specify an order using the configuration object. For the handlers that we don't specify in the sequence, we still don't know when they are going to run. It could run before or after the sequence. 
+When a service contains **multiple handlers** for the **same message**, they are not executed in a **particular order** by default, but we can specify an order using the **configuration** object. For the handlers that we don't specify in the **sequence**, we still don't know when they are going to run. It could run before or after the sequence. 
 
 ```sh
 endpointConfiguration.ExecuteTheseHandlersFirst(
@@ -1434,7 +1435,7 @@ public class ProvideConfiguration :
 }
 
 ```
-> All properties that have the WiredEncryptedString type will be encrypted using the current key, but lingering messages might be arriving at this endpoint that were encrypted using an older key, and the older keys are in the ExpiredKeys collection. If decryption of the property fails, NService will try the keys and ExpiredKeys to decrypt.
+> All properties that have the **WiredEncryptedString** type will be encrypted using the current key, but lingering messages might be arriving at this endpoint that were encrypted using an older key, and the older keys are in the **ExpiredKeys collection**. If decryption of the property fails, NService will try the keys and **ExpiredKeys** to decrypt.
 
 
 
@@ -1565,7 +1566,7 @@ await endpointInstance.ScheduleEvery(
 
 **Polymorphic Message Dispatch**
 
-Let's say we've created  a serviceV1 using the IOrderPlannedEvent. It turns out that the timestamp indicating when the order was placed exactly is necessary. So we create serviceV2 using an interface that is derived from IOrderPlannedEvent with the extra property added.
+Let's say we've created  a **serviceV1** using the **IOrderPlannedEvent**. It turns out that the timestamp indicating when the order was placed exactly is necessary. So we create **serviceV2** using an interface that is derived from **OrderPlannedEvent** with the **extra property** added.
 
 ```sh
 namespace V1.Messages
@@ -1589,10 +1590,10 @@ namespace V2.Messages
 }
 ```
 
-This fits the polymorphic message dispatch feature in NServiceBus. we could just publish the new IOrderPlannedEvent as normal in the publishing service. All other services using the old interface in the handler will receive the event as well. Using microservice architecture, we probably have a number of services running that handle the old version of IOrderPlannedEvent, but we don't want to update all handlers in all services with a new version at once. So initially we just update the publish service, and all other services will continue to get the event in their handler with the old version. Therefore we can update the services gradually or only when needed. 
+This fits the **polymorphic message dispatch feature** in **NServiceBus**. we could just publish the new **IOrderPlannedEvent** as normal in the publishing service. All other services using the old interface in the handler will receive the event as well. Using **microservice architecture**, we probably have a number of services running that handle the old version of **IOrderPlannedEvent**, but we don't want to **update all handlers** in all services with a new version at once. So initially we just update the **publish service**, and all other services will continue to get the event in their handler with the old version. Therefore we can update the services **gradually** or only when **needed**. 
 
 
-Another feature is **polymorphic event handling**. Let's assume that for VIP customers we have to create an **IOrderPlannedVipEvent** deriving from **IOrderPlannedEvent**. For non-VIP users, you could then publish *IOrderPlannedEvent*, which will only trigger handlers for the specific event, and for VIP users, publish the derive one, which will trigger handlers handling **IOrderPlannedVipEvent** and **IOrderPlannedEvent**. So the handlers with **IOrderPlannedEvent** could run the logic needed for every user, and the **IOrderVipEvent** handlers could run the **extra logic** needed for **VIPs**. 
+Another feature is **polymorphic event handling**. Let's assume that for VIP customers we have to create an **IOrderPlannedVipEvent** deriving from **IOrderPlannedEvent**. For non-VIP users, you could then publish **IOrderPlannedEvent**, which will only trigger handlers for the specific event, and for VIP users, publish the derive one, which will trigger handlers handling **IOrderPlannedVipEvent** and **IOrderPlannedEvent**. So the handlers with **IOrderPlannedEvent** could run the logic needed for every user, and the **IOrderVipEvent** handlers could run the **extra logic** needed for **VIPs**. 
 
 ```sh
  public Task Handle(IOrderPlannedEvent event, IMessageHandlerContext context)
@@ -1616,7 +1617,7 @@ Another feature is **polymorphic event handling**. Let's assume that for VIP cus
 
 **NServiceBus message pipeline** is a series of steps NServiceBus executes when a message comes in or a message goes out. A **step** has **pipeline awareness**, it knows where to fit in the pipeline and when to execute. A step always contains **behavior** that is **executed** when it's the **steps turn**. 
 
-For **incoming message pipeline**, the first step is executed. The **behavior** class contained in this step has an **Invoke method**. The two **parameters of the Invoke method **are context, used to **communicate** with other **behaviors**, and an action delegate called **next**. When **next** is called, the **behavior of the next step** is triggered. So one behavior can do something before or after the underlying steps with behaviors are executed. When the last step in the line calls next, NServiceBus walks back in the stack to execute all the logic that comes after the call to next. 
+For **incoming message pipeline**, the first step is executed. The **behavior** class contained in this step has an **Invoke method**. The two **parameters of the Invoke method **are context, used to **communicate** with other **behaviors**, and an action delegate called **next**. When **next** is called, the **behavior of the next step** is triggered. So one **behavior** can do something **before** or **after** the underlying **steps** with behaviors are **executed**. When the last step in the line calls next, **NServiceBus walks back** in the **stack** to **execute** all the **logic** that comes **after the call** to next. 
 
 ```sh
 public class SampleBehavior :
@@ -1662,11 +1663,11 @@ public class SampleBehavior :
     }
 }
 ```
-Next, we implement the **Invoke method**, which has a chosen **context objec**t and a **func of task** called **'next'** as **parameters**. **Behaviors** are great if we want to create a **disposable** object such as **data context** and **dispose** it after all other **behaviors** down the **pipeline** are done with it. 
+Next, we implement the **Invoke method**, which has a chosen **context object** and a **func of task** called **'next'** as **parameters**. **Behaviors** are great if we want to create a **disposable** object such as **data context** and **dispose** it after all other **behaviors** down the **pipeline** are done with it. 
 
 
 
-To let the other behaviors access the **data context**, we put it in the context by calling the set method on the **Extensions** object. Other **behaviors** can pull it out using the **get method**. 
+To let the other **behaviors** access the **data context**, we put it in the **context** by calling the **set method** on the **Extensions** object. Other **behaviors** can pull it out using the **get method**. 
 
 
 ```sh
@@ -1675,7 +1676,7 @@ To let the other behaviors access the **data context**, we put it in the context
 ```
  
 
-Next register the step in the pipeline. We just have to use the **endpointConfiguration** object for that, calling Register on the pipeline object, by specifying an instance of the **behavior** and a **description**. 
+Next **register** the **step** in the **pipeline**. We just have to use the **endpointConfiguration** object for that, calling **Register** on the pipeline object, by specifying an instance of the **behavior** and a **description**. 
 
 ```sh
 	public class Registration: RegisterStep
@@ -2081,4 +2082,244 @@ namespace eCommerce.Tests
 
 
 
+**ServiceControl (aka. The Spider in the Web)** 
+It's an **application** that **gathers information** about **messages** flowing through the application and its **endpoint**. It can also do **custom checks** which we can create ourself. All the **data ServiceControl** gathers is stored in an **embedded version of RavenDB**. If we've installed the entire Particular Platform Suite, **ServiceControl** is already active and **installed** as a **Windows service**. The **data** is **exposed** via a **REST API** that ServiceControl offers.
+
+**ServiceControl** is also an **endpoint** exposing messages as **events**. We can **respond** to these **events** in our own **handlers**. 
+
+![pic](src/eCommerce/images/figure15.jpg) 
+
+**Our Endpoints (are on top of ServiceControl) generate messages** and can **report** their **health** to **ServiceControl**. **ServiceControl** sponges up all the **data** and offers a **REST API** to **other members** of the **particular platform**, **ServicePulse** and **ServiceInsight**. 
+
+
+
+
+
+**REST API ServiceControl** is an **endpoint** which **publishes events** where we can **subscribe** to with our own endpoint, and we can make use of the **REST API ourself**.
+
+```sh
+//Default Url for ServiceControl
+http://localhost:33333/api
+{
+	"endpoints_error_url":"http://localhost:33333/api
+
+//specify {name} endpoint where to see the errors.
+//paging also supported
+//there's also a URL that gives we a list of endpoints
+	/endpoints/{name}/errors/{?page,per_page,direction,sort}"
+}
+```
+
+**additional information on ServiceControl** :
+
+- **ServiceControl** only **stores messages** that are sent to the **audit queue** and the **error queue**. The **configuration** of an **error queue** is **compulsory**, but the **audit queue** is not (i.e. intentionally done so to **enable the audit queue** on our **endpoints** if needed).
+- **ServiceControl stores** is by **default** retained for **30 days**, and the **purging process runs** every **minute** (all configurable and preferably if run centralized on the cluster).
+- **ServiceControl installed** with a platform installer, it is configured to use **MSMQ** as a **transport**. If we use **another transport**, we have to **deinstall it**, **download additional DLLs**, and **reinstall it using a different transport type**.
+
+
+In order to be **notified** if **messages** go to the **error queue** and since **ServiceControl** is an endpoint **publishing event**, we can create own **endpoint** that subscribes to **these events**. 
+
+We created  a **self-hosted commandline service Monitoring**. 
+
+1- install the **NuGet package ServiceControl.Contracts**, which contains the event classes. 
+
+2- add **routing** which **registered subscribers** with a **ServiceControl endpoint**(i.e. subscription for all events in the **ServiceControl.Contracts** assembly). 
+
+3- The **event classes** are not marked with **IEvent**, so we need to enable **unobtrusive mode**, i.e. The **configuration code** that tells NServiceBus that all classes in the **ServiceControl.Contracts** namespace are **events**. Note that also we configured the endpoint to use **JsonSerialization**, since **ServiceControl** serializes using JSON.
+
+```sh
+namespace eCommerce.Monitoring
+{
+    using System;
+    using System.Threading.Tasks;
+    using NServiceBus;
+    using NServiceBus.Logging;
+
+    class Program
+    {
+        static void Main()
+        {
+            AsyncMain().GetAwaiter().GetResult();
+        }
+
+        static async Task AsyncMain()
+        {
+            Console.Title = "eCommerce.Monitoring";
+            LogManager.Use<DefaultFactory>()
+                .Level(LogLevel.Info);
+
+            var endpointConfiguration = new EndpointConfiguration(endpointName: "eCommerce.Monitoring");
+            endpointConfiguration.UseTransport<MsmqTransport>();
+
+            //Step3: need to configure the endpoint to use JsonSerialization, since 
+			//ServiceControl serializes using JSON.
+            endpointConfiguration.UseSerialization<JsonSerializer>();
+
+            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            endpointConfiguration.EnableInstallers();
+            endpointConfiguration.SendFailedMessagesTo(errorQueue: "error");
+            endpointConfiguration.AuditProcessedMessagesTo(auditQueue: "audit");
+
+            //Step2: Since event classes are not marked with IEvent we need to enable unobtrusive mode. 
+            //this convention tells  NServiceBus that all classes in the ServiceControl.Contracts
+            //namespace are events (type of IEvent).
+            endpointConfiguration.Conventions()
+                .DefiningEventsAs(t =>
+                    //ServiceControl.Contracts Assembly contains also other events (than MessageFailed)
+                    //that let us respond to heartbeats that stop
+                    //and restart, and custom checks that fail or succeed.
+                    t.Namespace != null && t.Namespace.StartsWith("ServiceControl.Contracts"));
+
+            //Step1: add routing in the config file, which registered subscribers with 
+			//a ServiceControl endpoint.
+            //Here a subscription is created for all events in the ServiceControl.Contracts assembly.
+            //<add Assembly="ServiceControl.Contracts" Endpoint="Particular.ServiceControl"/>
+            endpointConfiguration.CustomCheckPlugin(serviceControlQueue: "particular.servicecontrol");
+
+
+            var endpointInstance = await Endpoint.Start(endpointConfiguration)
+                // prevent the passing in of the controls thread context into the new
+                // thread, which we don't need for sending a message
+                .ConfigureAwait(continueOnCapturedContext: false);
+            try
+            {
+                Console.WriteLine("Press any key to exit");
+                Console.ReadKey();
+            }
+            finally
+            {
+                await endpointInstance.Stop()
+                    // prevent the passing in of the controls thread context into the new
+                    // thread, which we don't need for sending a message
+                    .ConfigureAwait(continueOnCapturedContext: false);
+            }
+        }
+    }
+}
+```
+
+4- **Create handler** : The **MessageFailed handler** that handles the **MessageFailed event**. The type is present in the **ServiceControl.Contracts** assembly. 
+
+
+```sh
+using System.Threading.Tasks;
+using NServiceBus;
+using ServiceControl.Contracts;
+
+namespace eCommerce.Monitoring
+{
+    //Final step: MessageFailedHandler handles the MessageFailed event.
+    //The type is present in the ServiceControl.Contracts assembly.
+    //code to send a notification.
+    public class MessageFailedHandler: IHandleMessages<MessageFailed>
+    {
+        public async Task Handle(MessageFailed message, IMessageHandlerContext context)
+        {
+		//Servicecontrol passes in the ID as the message, as well as the exception that 
+		//caused the message to end up in the error queue.
+            string failedMessageId = message.FailedMessageId;
+            string exceptionMessage = message.FailureDetails.Exception.Message;
+
+            //here code to send a notification
+        }
+    }
+}
+
+```
+
+**ServiceControl.Contracts** contains also other **events** that let us **respond** to **heartbeats** that **stop** and **restart**, and **custom checks** that **fail** or **succeed**.
+
+[Source code](src/eCommerce/eCommerce.Monitoring) 
+
+
+
+
+**Implementing CustomChecks**
+
+1- Add a **class** (e.g. RestServiceHealthCustomCheck) to the monitoring class library we've created previously. 
+2- Add the **ServiceControl custom checks** NuGet package to it (we need a specific one for the NServiceBus version we're using). 
+
+2- Derive our class from **CustomCheck** : by default, it will run every time our services start, but we can also optionally indicate a time interval, the check will run continuously with the indicated timebetween runs. 
+
+3- Implement the actual check in the **PerformCheck** method. 
+
+```sh
+
+//Custom checks are registered automatically by the assembly scanning NServiceBus does.
+using System;
+using System.Threading.Tasks;
+using ServiceControl.Plugin.CustomChecks;
+
+namespace eCommerce.Monitoring
+{
+    //Implementing CustomChecks
+    //1- add RestServiceHealthCustomCheck
+    //2- add ServiceControl.Plugin.Nsb6.CustomChecks nuget package
+    //3- RestServiceHealthCustomCheck derive from CustomCheck base class
+    //4- it will run every time your services start, but optionally indicate a time interval
+    //The check will run continuously with the indicated time between runs
+    //5-Implement the actual check in the PerformCheck method
+	
+	
+    public class RestServiceHealthCustomCheck: CustomCheck
+    {
+	
+	//we call the base constructor, giving the CustomCheck an ID,
+	//a category, and we specify the time interval (e.g. 5 minutes).
+     public RestServiceHealthCustomCheck(): 
+            base("RestServiceHealth", //giving the CustomCheck an ID
+                "RestService", // a category
+                TimeSpan.FromSeconds(5)) //specify the time interval
+        { }
+
+//We programmed the actual check in the override of the abstract methodPerformCheck.
+        public override Task<CheckResult> PerformCheck()
+        {
+            //code: try Ping service
+
+
+            //CheckResult.Pass or CheckResult.Failed with an indicator of why it failed
+            //so can see the custom check failing on the ServicePulse dashboard
+			
+			//return either CheckResult.Pass or CheckResult.Failed 
+			//with an indicator of why it failed.
+            return CheckResult.Failed("REST service not reachable");
+        }
+    }
+}
+
+```
+
+```sh
+
+using System;
+using System.Threading.Tasks;
+using NServiceBus;
+using ServiceControl.Contracts;
+
+namespace eCommerce.Monitoring
+{
+    public class CustomCheckFailedHandler: IHandleMessages<CustomCheckFailed>
+    {
+        public async Task Handle(CustomCheckFailed message, 
+								IMessageHandlerContext context)
+        {
+            //notify
+        }
+    }
+}
+```
+[Source code](src/eCommerce/eCommerce.Monitoring) 
+
+>> when we run the **services** and open up **ServicePulse**, we can see the **custom check failing on the dashboard**. When we click on the **indicator**, we can find out the details of what went wrong. we can see here that the REST service could not be reached.
+
+
+
+**ServiceInsight** 
+
+It is a desktop application that lets us **visualize message flows in detail**. **ServiceInsight** will connect to the default **erviceControl URI**, but we can also connect to another **ServiceControl instance** by going to *Tools, Connect To Service Control*... 
+
+It lists messages with columns with the **ID**, and the **type of message**, as well as the **time** it was **sent**, its **critical time**, the **processing time**, and the **delivery time**. 
+
+The **saga service** needs to have the appropriate **saga audit NuGet package** installed that sends additional information to **ServiceControl** so we could see detailed information about the saga lifetime all **messages involved**.
 
