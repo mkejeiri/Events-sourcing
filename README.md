@@ -2311,7 +2311,7 @@ namespace eCommerce.Monitoring
 ```
 [Source code](src/eCommerce/eCommerce.Monitoring) 
 
->> when we run the **services** and open up **ServicePulse**, we can see the **custom check failing on the dashboard**. When we click on the **indicator**, we can find out the details of what went wrong. we can see here that the REST service could not be reached.
+>> when we run the **services** and open up **ServicePulse**, we can see the **custom check failing on the dashboard**. When we click on the **indicator**, we can find out the details of what went wrong. we can see that the REST service could not be reached.
 
 
 
