@@ -910,7 +910,7 @@ public class EndpointConfig : IConfigureThisEndpoint
     public void Customize(EndpointConfiguration configuration)
     {
         // use 'configuration' object to configure scanning
-		configuration.UsePersistence<InMemoryPersitance>();
+		configuration.UsePersistence<InMemoryPersistance>();
 		configuration.SendOnly();
     }
 }
@@ -1117,7 +1117,7 @@ As long as the **saga** runs, it persists its state in a durable storage. The wa
 
 #### Defining Sagas
 
-To define a **saga** we use the **Saga** base class contained in the NServiceBus core. **Saga** is a generic class, it needs the type of the object that we wrote to maintain the state of the saga, as long as it's running. This object is persisted along the way. Define which message triggers the creation of a new saga by using **theIAmStartedByMessages** (*e.g. ProcessOrderCommand*) interface. As a generic parameter, the message type is supplied, so when the saga receives the **StartOrder message**, it starts the **workflow**. A new state object is **created** and **persisted** (*e.g. ProcessOrderSagaData*), but only when **no existing saga** data can be found for the message. Other messages are handled in the same way using the *IHandleMessages* interface (*e.g IOrderPlannedMessage & IOrderDispatchedMessage*). The ending of the saga is not a requirement, it can potentially run forever.
+To define a **saga** we use the **Saga** base class contained in the NServiceBus core. **Saga** is a generic class, it needs the type of the object that we wrote to maintain the state of the saga, as long as it's running. This object is persisted along the way. Define which message triggers the creation of a new saga by using **the IAmStartedByMessages** (*e.g. ProcessOrderCommand*) interface. As a generic parameter, the message type is supplied, so when the saga receives the **StartOrder message**, it starts the **workflow**. A new state object is **created** and **persisted** (*e.g. ProcessOrderSagaData*), but only when **no existing saga** data can be found for the message. Other messages are handled in the same way using the *IHandleMessages* interface (*e.g IOrderPlannedMessage & IOrderDispatchedMessage*). The ending of the saga is not a requirement, it can potentially run forever.
 
 [ProcessOrderSaga.cs](src/eCommerce/eCommerce.Saga/ProcessOrderSaga.cs)
 ```sh
@@ -1245,7 +1245,7 @@ We could also use an enum in the saga data to keep track of the step or state th
 
 > Note that NServiceBus V6+ doesn't require anymore the unique attribute. 
 
-- **NHibernate** : persistence supports relational da tabases. We should know that child objects in the saga's data object are serialized and put in one column. And each collection use is going to result in extra tables, **the more tables, the more chance locks will occur**. By marking the properties in the data object as virtual, a derive class is created behind the scenes that checks if the data from the extra tables is really needed. 
+- **NHibernate** : persistence supports relational databases. We should know that child objects in the saga's data object are serialized and put in one column. And each collection use is going to result in extra tables, **the more tables, the more chance locks will occur**. By marking the properties in the data object as virtual, a derive class is created behind the scenes that checks if the data from the extra tables is really needed. 
 
 - **Azure saga persistence** is a storage mechanism built on Azure table storage. It is very low cost and easy to set up in Azure. It supports the storgage of any type table storage can handle. 
 
@@ -1258,7 +1258,7 @@ We could also use an enum in the saga data to keep track of the step or state th
 
 #### Timeouts or Saga Reminders
 
-Timeouts are a powerful feature of sagas that are like a reminder we get of an agenda entry. When we set a timeout, a message is sent to NServiceBus' internal Timeout Manager. With the sending of the message, we specify a certain time span like in 2 hours, or an absolute time like August 8 at 7:00 PM. When it's time, the Timeout Manager sends the same message back to the saga which requested a timeout. 
+Timeouts are a powerful feature of sagas that are like a reminder we get of an agenda entry. When we set a timeout, a message is sent to NServiceBus' **internal Timeout Manager**. With the sending of the message, we specify a certain time span like in 2 hours, or an absolute time like August 8 at 7:00 PM. When it's time, the Timeout Manager sends the same message back to the saga which requested a timeout. 
 
 This way we can, for example, send a registered user an email after a certain amount of time when he forgot to confirm his email address. When the saga has been completed in the meantime, the timeout message, like all messages for the saga, are ignored. 
 
