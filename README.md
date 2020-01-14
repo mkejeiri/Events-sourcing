@@ -2326,6 +2326,6 @@ It is a desktop application that lets us **visualize message flows in detail**. 
 
 It lists messages with columns with the **ID**, and the **type of message**, as well as the **time** it was **sent**, its **critical time**, the **processing time**, and the **delivery time**. 
 
-The **Saga service** needs to have the appropriate **Saga audit NuGet package** installed that sends additional information to **ServiceControl** so we could see detailed information about the saga lifetime all **messages involved**.
+The **Saga service** needs to have the appropriate **Saga audit NuGet package** installed that sends additional information to **ServiceControl** so we could see detailed information about the **saga lifetime** all **messages involved**.
 [More...](https://docs.particular.net/nservicebus/sagas/saga-audit)
 
