@@ -1634,14 +1634,14 @@ public class SampleBehavior :
 }
 ```
 
-The **default NServiceBus pipeline** consists of a number of steps, and there's a different pipeline for incoming and outgoing messages. 
+The **default NServiceBus pipeline** consists of a number of steps, and there's a different pipeline for **incoming and outgoing messages**. 
 
 We cherry picked a few :
 
 - **Incoming** : **DeserializeMessages**, **MutateIncomingMessages**, **InvokeHandlers**.
 - **Outgoing** : **SerializeMessage**, **MutateOutgoingMessages**, **DispatchMessageToTransport**.
 
-There's a step that **serializes** and **deserializes** **messages**, one that takes care of executing the registered **mutators** for incoming and outgoing messages, and the registered **unit of work** object. There's a step that takescare of **invoking the handlers** in the incoming messages pipeline, and the **DispatchMessageToTransport** to take care of delivering a message to the transport in the outgoing message pipeline.
+There's a step that **serializes** and **deserializes** **messages**, one that takes care of executing the registered **mutators** for **incoming and outgoing messages**, and the registered **unit of work** object. There's a step that takes care of **invoking the handlers** in the incoming messages pipeline, and the **DispatchMessageToTransport** to take care of delivering a message to the transport in the outgoing message pipeline.
 
 
 **Implementing Custom Behaviors**
