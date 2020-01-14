@@ -1617,7 +1617,7 @@ Another feature is **polymorphic event handling**. Let's assume that for VIP cus
 
 **NServiceBus message pipeline** is a series of steps NServiceBus executes when a message comes in or a message goes out. A **step** has **pipeline awareness**, it knows where to fit in the pipeline and when to execute. A step always contains **behavior** that is **executed** when it's the **steps turn**. 
 
-For **incoming message pipeline**, the first step is executed. The **behavior** class contained in this step has an **Invoke method**. The two **parameters of the Invoke method **are context, used to **communicate** with other **behaviors**, and an action delegate called **next**. When **next** is called, the **behavior of the next step** is triggered. So one **behavior** can do something **before** or **after** the underlying **steps** with behaviors are **executed**. When the last step in the line calls next, **NServiceBus walks back** in the **stack** to **execute** all the **logic** that comes **after the call** to next. 
+For **incoming message pipeline**, the first step is executed. The **behavior** class contained in this step has an **Invoke method**. The two parameters of the **Invoke** method are **context**, used to **communicate** with other **behaviors**, and an **action** delegate called **'next'**. When **'next'** is called, the **behavior of the next step** is triggered. So one **behavior** can do something **before** or **after** the underlying **steps** with behaviors are **executed**. When the last step in the line calls next, **NServiceBus walks back** in the **stack** to **execute** all the **logic** that comes **after the call** to next. 
 
 ```sh
 public class SampleBehavior :
@@ -1667,16 +1667,19 @@ Next, we implement the **Invoke method**, which has a chosen **context object** 
 
 
 
+
 To let the other **behaviors** access the **data context**, we put it in the **context** by calling the **set method** on the **Extensions** object. Other **behaviors** can pull it out using the **get method**. 
 
+Next **register** the **step** in the **pipeline**. We just have to use the **endpointConfiguration** object for that, calling **Register** on the pipeline object, by specifying an instance of the **behavior** and a **description**. 
 
 ```sh
 	//Creating a New Step
 	endpointConfiguration.Pipeline.Register(new SampleBehavior(), "A sample pipeline step");
 ```
- 
 
-Next **register** the **step** in the **pipeline**. We just have to use the **endpointConfiguration** object for that, calling **Register** on the pipeline object, by specifying an instance of the **behavior** and a **description**. 
+
+Or derive a class from **RegisterStep**, and pass an **ID**, the **typeof** the **behavior**, and a description to the base constructor. 
+
 
 ```sh
 	public class Registration: RegisterStep
@@ -1687,7 +1690,6 @@ Next **register** the **step** in the **pipeline**. We just have to use the **en
 					"A sample pipeline step") { } 
 	}
 ```
-Or derive a class from **RegisterStep**, and pass an **ID**, the **typeof** the **behavior**, and a description to the base constructor. 
 
 A class deriving from **RegisterStep** will automatically be **picked up** by **NServiceBus** when the **endpoint is created**, because of its **assembly scanning capability**. If we don't want a **new step**, but we want to **replace** an **existing one**, we just have to **create a new behavior**, and then replace using the **Replace method** on the **pipeline** object. 
 
@@ -1695,8 +1697,8 @@ A class deriving from **RegisterStep** will automatically be **picked up** by **
 	//Replacing the Behavior of a Step
 	endpointConfiguration.Pipeline.Replace("existing step id", typeof(SampleBehavior), "Description");
 ```
-This time we have to tell it what the **ID** is of the **step** we want to **replace**.
 
+This time we have to tell it what the **ID** is of the **step** we want to **replace**.
 
 
 **Message Mutators**
@@ -1724,7 +1726,8 @@ Last, we have to register a **mutator** with **NServiceBus** using the **Registe
 				(DependencyLifecycle.InstancePerCall);
 		});
 ```
-The generic parameter is your message mutator type. You can also specify what the lifecycle of the mutator object should be. 
+
+The generic parameter is your **message mutator** type. You can also specify what the **lifecycle of the mutator** object should be. 
 
 
 
@@ -1733,6 +1736,9 @@ The generic parameter is your message mutator type. You can also specify what th
 
 A unit of work allows us to execute code when a message **begins processing** in the **pipeline** in the **Begin method** and after it ends processing in the **end method**. For that to work, we need implement the **IManageUnitsOfWork** interface.
 
+When an **exception** occurs in the pipeline, it is passed to the **End method**. 
+
+
 ```sh
 	public class MyUnitOfWork: IManageUnitsOfWork
 	{
@@ -1740,8 +1746,6 @@ A unit of work allows us to execute code when a message **begins processing** in
 		public Task End(System.Exception ex = null){}
 	}
 ```
-
-When an **exception** occurs in the pipeline, it is passed to the **End method**. 
 
 > Unit of works are are easier to work with than custom behaviors but less powerful, i.e. we can't wrap the **begin method** and **end method** in a using statement. Unit of works are great to execute code that always has to be executed with every message (to avoid DRY in every handler) => e.g SaveChanges on an ORM or database Context object.   
 
@@ -1754,7 +1758,7 @@ When an **exception** occurs in the pipeline, it is passed to the **End method**
 
 - Secondary information about the message that is **not** directly **related** to its **business** purpose. 
 - Similar to HTTP headers
-- Should contain **metadata** only : e.g. **data** needed for the **infrastructure**, e.g. **security token** used by a security mechanism like **OAuth2**.
+- Should contain **metadata** only : e.g. **data** needed for the **infrastructure** or  **security token** used by a security mechanism like **OAuth2**.
 - Can be written and read in **behaviors**, **mutators** and **handlers**.
 
 A part from **handlers**, the **header collection** of a message can be **manipulated** and **read** in **behaviors** and **mutators**, so the **header logic** can be easily **shared**.
