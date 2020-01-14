@@ -1605,7 +1605,8 @@ Another feature is **polymorphic event handling**. Let's assume that for VIP cus
 ```sh
  public Task Handle(IOrderPlannedVipEvent event, IMessageHandlerContext context)
     {
-        //Run business logic for VIP customers
+     //Run only extra business logic for VIP customers, 
+     //common customer logic is already run by the previous handler.
     }
 ```
 
