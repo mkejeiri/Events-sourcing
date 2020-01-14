@@ -2322,9 +2322,10 @@ namespace eCommerce.Monitoring
 
 **ServiceInsight** 
 
-It is a desktop application that lets us **visualize message flows in detail**. **ServiceInsight** will connect to the default **erviceControl URI**, but we can also connect to another **ServiceControl instance** by going to *Tools, Connect To Service Control*... 
+It is a desktop application that lets us **visualize message flows in detail**. **ServiceInsight** will connect to the default **ServiceControl URI**, but we can also connect to another **ServiceControl instance** by going to *Tools > Connect To Service Control*... 
 
 It lists messages with columns with the **ID**, and the **type of message**, as well as the **time** it was **sent**, its **critical time**, the **processing time**, and the **delivery time**. 
 
-The **saga service** needs to have the appropriate **saga audit NuGet package** installed that sends additional information to **ServiceControl** so we could see detailed information about the saga lifetime all **messages involved**.
+The **Saga service** needs to have the appropriate **Saga audit NuGet package** installed that sends additional information to **ServiceControl** so we could see detailed information about the saga lifetime all **messages involved**.
+[More...](https://docs.particular.net/nservicebus/sagas/saga-audit)
 
